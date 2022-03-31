@@ -1,5 +1,5 @@
 
-# Hybrid Methylation Alignment Experiments
+# WGBS Alignment Experiments
 
 This script assumes that you have You have cloned the git repository,
 [configured Singularity](../docker/), and set up the [WGBS data &
