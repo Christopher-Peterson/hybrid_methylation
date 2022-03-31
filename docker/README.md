@@ -2,7 +2,8 @@
 # Docker/Singularity Setup
 
 This project uses Docker (and Singularity, the TACC-equivalent version)
-for installation and version control of bioniformatics packages.
+for installation and version control of bioniformatics packages. When
+installed correctly, these are invisible to the end-user.
 
 ## Installation
 
@@ -10,12 +11,19 @@ for installation and version control of bioniformatics packages.
 2.  Copy `docker/singularity_mask.sh` to `$WORK/singularity`.
 3.  Edit your `.bashrc` to include `$WORK/singularity/bin` in your
     `$PATH`.
-4.  Run
-    `sbatch $SCRATCH/hybrid_methylation/slurm/setup_singularity.slurm`.
-    This will install the singularity modules and configure them so that
-    they can be used as regular bash commands.
+4.  Prepare and run the singularity installation script:
 
-### Errors
+``` bash
+cds hybrid_methylation/docker
+
+mkdir logs
+sbatch slurm/setup_singularity.slurm
+```
+
+This will install the singularity modules and configure them so that
+they can be used as regular bash commands.
+
+### If there are errors
 
 There seems to be an issue with Docker-Hub where some of my newer
 repositories not wanting to download on Singularity. This appears to be

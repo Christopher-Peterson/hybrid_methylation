@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# The Hybrid Methylation
+# The Hybrid Methylation Project
 
 (At some point, I’ll put a real introduction here)
 
@@ -22,7 +22,7 @@ git clone https://github.com/Christopher-Peterson/hybrid_methylation.git
 
 ## Whole Genome Bisulfide Sequence Data
 
-1.  Prepare the Data
+1.  [Prepare the Data](wgbs_setup/).
 
 2.  [Align the trimmed reads and extract the methylation
     information](alignment_experiments/).
