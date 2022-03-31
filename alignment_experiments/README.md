@@ -1,33 +1,27 @@
 
 # Hybrid Methylation Alignment Experiments
 
+This script assumes that you have You have cloned the git repository,
+[configured Singularity](../docker/), and set up the [WGBS data &
+genome](../wgbs_setup/). Before beginning, make sure everything in
+`scripts` is executable:
+
+``` bash
+cds hybrid_methylation
+chmod +x alignment_experiments/scripts/*
+```
+
+## Determining Alignment Parameters
+
 Aligning the WGBS sequencing data will be challenging, and there are a
-variety of ways that it can be done. This will document the process of
-testing various bismark parameters.
+variety of ways that it can be done. This will begin by testing various
+bismark parameters.
 
 Key metrics:
 
 -   Mapping efficiency
 -   Methylation context percentages
 -   Conversion efficiency based on lambda DNA spike
-
-## Prerequisites
-
--   The base directory is `$SCRATCH/hybrid_methylation`; from here, it
-    is `$BASE_DIR`.
--   Reads should be trimmed and accessible from
-    `$BASE_DIR/reads/trimmed`.
--   Singularity images have been configured and aliased.
--   The genome should be setup for bismark and available in
-    `$BASE_DIR/genome.sh`.
--   The directory `alignment_experiments` exists in `$BASE_DIR`, with
-    the following files inside it. - `functions.sh` -
-    `slurm_templates/bismark_align_run.slurm` -
-    `slurm_templates/bismark_align_trial.slurm` -
-    `scripts/bismark_align_se.sh` - `scripts/bismark_align_pe.sh`
--   Files in the scripts directory should be executable
-
-## Determining Alignment Parameters
 
 First, we’ll define this function to set up a new experiment
 
@@ -188,6 +182,6 @@ cp -r methyl_extract/*{.gz,_summary.txt,M-bias.txt,_splitting_report.txt} $WRK/m
 
 # ToDo:
 
-Sanity checks with IGV viewer
+Sanity checks with IGV viewer Lambda Spike?
 
 SNPsplit

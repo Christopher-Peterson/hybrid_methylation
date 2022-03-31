@@ -22,7 +22,8 @@ git clone https://github.com/Christopher-Peterson/hybrid_methylation.git
 
 ## Whole Genome Bisulfide Sequence Data
 
-1.  [Get the Data, trim the reads, and prepare the reference genome](wgbs_setup/).
+1.  [Get the Data, trim the reads, and prepare the reference
+    genome](wgbs_setup/).
 
 2.  [Align the trimmed reads and extract the methylation
     information](alignment_experiments/).
