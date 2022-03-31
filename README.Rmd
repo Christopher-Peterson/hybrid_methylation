@@ -33,3 +33,5 @@ git clone https://github.com/Christopher-Peterson/hybrid_methylation.git
 1. [Prepare the Data](wgbs_setup/).
 
 2. [Align the trimmed reads and extract the methylation information](alignment_experiments/).
+
+3. (I am working on this part)

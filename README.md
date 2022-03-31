@@ -26,3 +26,5 @@ git clone https://github.com/Christopher-Peterson/hybrid_methylation.git
 
 2.  [Align the trimmed reads and extract the methylation
     information](alignment_experiments/).
+
+3.  (I am working on this part)
