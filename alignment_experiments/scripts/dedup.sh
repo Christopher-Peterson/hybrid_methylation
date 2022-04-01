@@ -6,8 +6,6 @@
 FILE=${1}
 OUT_DIR=${2:-"bams/dedup"}
 
-source $WORK/singularity/singularity_aliases.sh
-
 # Handle paired vs. single ends
 TYPE=$(cat config/ends.type)
 # Remove the "e" from "pe" or "se" and add the dash to the front

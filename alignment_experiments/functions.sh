@@ -13,7 +13,7 @@ function new_alignment_experiment {
   mkdir -p $BASE_DIR/alignment_experiments/$NAME
   cd $BASE_DIR/alignment_experiments/$NAME
   mkdir slurm logs jobs temp bams reports config methyl_extract 
-  mkdir bams/dedup reports/dedup
+  mkdir bams/dedup reports/dedup bams/sorted
   # Save some basic configuration details
   echo $TYPE > config/ends.type
   echo $BISMARK_PARMS > config/bismark.parms

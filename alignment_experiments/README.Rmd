@@ -191,6 +191,46 @@ cp -r bams/dedup/*bam $WRK/bams/dedup/ &
 cp -r methyl_extract/*{.gz,_summary.txt,M-bias.txt,_splitting_report.txt} $WRK/methyl_extract
 ```
 
+## Sanity Checking the alignment
+
+Before proceeding, we need to check the alignments to make sure that they make sense.
+We'll be using [IGV](https://igv.org) for this.
+Before using IGV, we need to sort and index the deduplicated bam files with samtools.
+(Also, the reference genome should be intexed; Go back and add this to the genome prep script!)
+
+### Sorting the BAM files
+
+First, we're using the sort & index script on a single bam to ensure the script works.
+```{bash, eval=FALSE,echo=TRUE}
+sbatch slurm/sort_trial.slurm
+```
+
+That ran in about 10 minutes, so let's submit the full run.
+
+```{bash, eval=FALSE,echo=TRUE}
+sbatch slurm/sort_run.slurm
+```
+
+
+### Installing IGV
+
+First, download and unzip IGV to TACC.
+
+```{bash, eval = FALSE, echo = TRUE}
+cds hybrid_methylation
+mkdir IGV
+cd IGV
+wget https://data.broadinstitute.org/igv/projects/downloads/2.12/IGV_Linux_2.12.3_WithJava.zip 
+unzip IGV_Linux_2.12.3_WithJava.zip
+```
+
+### Using IGV 
+
+We're going to use the [TACC Visualization Portal](vis.tacc.utexas.edu/) to use IGV.
+
+
+
+
 # ToDo:
 
 Sanity checks with IGV viewer
