@@ -34,6 +34,7 @@ source singularity_mask.sh
 
 singularity_mask bedtools $WORK/singularity/bedtools_latest.sif
 singularity_mask bismark $WORK/nextflow/work/singularity/nfcore-methylseq-1.6.1.img
+singularity_mask samtools $WORK/nextflow/work/singularity/nfcore-methylseq-1.6.1.img
 singularity_mask bismark_genome_preparation $WORK/nextflow/work/singularity/nfcore-methylseq-1.6.1.img
 singularity_mask cutadapt $WORK/singularity/trim_galore_0.6.7.sif
 singularity_mask fastqc $WORK/singularity/trim_galore_0.6.7.sif

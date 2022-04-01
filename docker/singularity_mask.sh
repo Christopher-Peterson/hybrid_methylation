@@ -8,7 +8,7 @@ function singularity_mask {
   # Args: bin_name, image file, command = bin_name
   local BIN_NAME=$1
   local SIF=$2 # Should contain whole path
-  local CMD=${3:-BIN_NAME}
+  local CMD=${3:-$BIN_NAME}
   local BIN=$WORK/singularity/bin/$BIN_NAME
   # Setup the base of the file
   echo "#!/bin/bash
