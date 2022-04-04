@@ -13,6 +13,7 @@
 #------------------------------------------------------
 
 # Sort and index a bam file
+module unload xalt
 
 FILE="lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.bam"
 
