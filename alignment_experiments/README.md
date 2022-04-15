@@ -219,12 +219,12 @@ when we run it. We’ll do this by making a scratch directory for IGV and
 then linking it to home.
 
 ``` bash
-cds
+cdw
 mkdir IGV_genomes
 cdh
 mkdir igv
 cd igv
-ln -s $SCRATCH/IGV_files genomes
+ln -s $WORK/IGV_files genomes
 ```
 
 ### Using IGV
