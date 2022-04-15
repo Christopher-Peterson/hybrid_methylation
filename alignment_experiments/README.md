@@ -208,17 +208,37 @@ sbatch slurm/sort_run.slurm
 First, download and unzip IGV to TACC.
 
 ``` bash
-cds hybrid_methylation
-mkdir IGV
-cd IGV
+cdw 
 wget https://data.broadinstitute.org/igv/projects/downloads/2.12/IGV_Linux_2.12.3_WithJava.zip 
 unzip IGV_Linux_2.12.3_WithJava.zip
+rm IGV*zip
+```
+
+Next, we want to make sure that IGV doesn’t start writing data to $HOME
+when we run it. We’ll do this by making a scratch directory for IGV and
+then linking it to home.
+
+``` bash
+cds
+mkdir IGV_genomes
+cdh
+mkdir igv
+cd igv
+ln -s $SCRATCH/IGV_files genomes
 ```
 
 ### Using IGV
 
 We’re going to use the [TACC Visualization Portal](vis.tacc.utexas.edu/)
-to use IGV.
+to use IGV. Go to the portal and start a DCV remote desktop session on
+Lonestar 6 using the development queue. If DCV is unavailable, you can
+use VNC instead. When the page changes, click the green “Connect” button
+(once it appears), then sign into TACC on the DCV page.
+
+On the virtual desktop, open a terminal, navigate to where you saved
+IGV, and run `igv.sh`. If you want, you can right-click on the desktop
+and create a launcher (a.k.a., a shortcut) for it to save time in the
+future.
 
 # ToDo:
 
