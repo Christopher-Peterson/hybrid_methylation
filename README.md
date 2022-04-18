@@ -24,7 +24,7 @@ git clone https://github.com/Christopher-Peterson/hybrid_methylation.git
     tools for use on TACC.
 
 Contributors to this repository should also follow [these
-instructions](setup/dev)..
+instructions](setup/dev).
 
 ## Whole Genome Bisulfide Sequence Data
 
