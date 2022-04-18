@@ -1,0 +1,31 @@
+
+# Setup for contributors
+
+This directory contains additional setup instructions for
+developers/contributors. If you are just trying to replicate the project
+without adding to it, you can ignore this.
+
+## Ensure Rmd and Md documentation is synchronized
+
+The documentation workflow for this project is to update the README.Rmd,
+knit it to README.md, and then commit both. To simplify this workflow,
+do the following:
+
+1.  In RStudio, open one of the README.Rmd files and click on the gear
+    icon next to the “Knit” button (These are below the document tabs).
+    Select *(No Preview)* from the menu.
+
+2.  Check “Knit on Save” on the same row. You will need to do this for
+    every README.Rmd file. This will ensure that the markdown files is
+    automatically updated every time you save the RMarkdown without
+    bothering you with a pop-up.
+
+3.  Configure sync-readme.sh as a git hook. This should prevent you from
+    committing one file without the other.
+
+``` bash
+# From the base directory in your local system
+cd .git/hooks
+# Create a link to the script as a git hook
+ln -s ../../setup/dev/sync-readme.sh pre-commit
+```
