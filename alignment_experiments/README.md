@@ -2,8 +2,8 @@
 # WGBS Alignment Experiments
 
 This script assumes that you have You have cloned the git repository,
-[configured Singularity](../docker/), and set up the [WGBS data &
-genome](../wgbs_setup/). Before beginning, make sure everything in
+[configured Singularity](../setup/docker/), and set up the [WGBS data &
+genome](../setup/wgbs_setup/). Before beginning, make sure everything in
 `scripts` is executable:
 
 ``` bash
@@ -212,6 +212,16 @@ cdw
 wget https://data.broadinstitute.org/igv/projects/downloads/2.12/IGV_Linux_2.12.3_WithJava.zip 
 unzip IGV_Linux_2.12.3_WithJava.zip
 rm IGV*zip
+cd IGV*
+
+# Get IGV tools
+wget https://data.broadinstitute.org/igv/projects/downloads/2.12/IGV_2.12.3.zip
+unzip IGV_2.12.3.zip
+rm IGV_2.12.3.zip
+
+# Copy IGV tools to base directory so they'll use the bundled java
+cp IGV_2.12.3/igvtools .
+cp IGV_2.12.3/igvtools_readme.txt .
 ```
 
 Next, we want to make sure that IGV doesn’t start writing data to $HOME
@@ -242,6 +252,8 @@ future.
 
 # ToDo:
 
-Sanity checks with IGV viewer Lambda Spike?
+Sanity checks with IGV viewer Try using igvtools to automatically get
+the “count” of reads at each point, then export them to somethin inR.
+Lambda Spike?
 
 SNPsplit
