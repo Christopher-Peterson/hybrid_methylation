@@ -2,9 +2,9 @@
 # WGBS Alignment Experiments
 
 This script assumes that you have You have cloned the git repository,
-[configured Singularity](../setup/docker/), and set up the [WGBS data &
-genome](../setup/wgbs_setup/). Before beginning, make sure everything in
-`scripts` is executable:
+[configured Singularity](../setup/docker/), set up [IGV](../setup/igv),
+and prepared the [WGBS data & genome](../setup/wgbs_setup/). Before
+beginning, make sure everything in `scripts` is executable:
 
 ``` bash
 cds hybrid_methylation
@@ -203,52 +203,11 @@ That ran in about 10 minutes, so let’s submit the full run.
 sbatch slurm/sort_run.slurm
 ```
 
-### Installing IGV
-
-First, download and unzip IGV to TACC.
-
-``` bash
-cdw 
-wget https://data.broadinstitute.org/igv/projects/downloads/2.12/IGV_Linux_2.12.3_WithJava.zip 
-unzip IGV_Linux_2.12.3_WithJava.zip
-rm IGV*zip
-cd IGV*
-
-# Get IGV tools
-wget https://data.broadinstitute.org/igv/projects/downloads/2.12/IGV_2.12.3.zip
-unzip IGV_2.12.3.zip
-rm IGV_2.12.3.zip
-
-# Copy IGV tools to base directory so they'll use the bundled java
-cp IGV_2.12.3/igvtools .
-cp IGV_2.12.3/igvtools_readme.txt .
-```
-
-Next, we want to make sure that IGV doesn’t start writing data to $HOME
-when we run it. We’ll do this by making a scratch directory for IGV and
-then linking it to home.
-
-``` bash
-cdw
-mkdir IGV_genomes
-cdh
-mkdir igv
-cd igv
-ln -s $WORK/IGV_files genomes
-```
-
 ### Using IGV
 
-We’re going to use the [TACC Visualization Portal](vis.tacc.utexas.edu/)
-to use IGV. Go to the portal and start a DCV remote desktop session on
-Lonestar 6 using the development queue. If DCV is unavailable, you can
-use VNC instead. When the page changes, click the green “Connect” button
-(once it appears), then sign into TACC on the DCV page.
-
-On the virtual desktop, open a terminal, navigate to where you saved
-IGV, and run `igv.sh`. If you want, you can right-click on the desktop
-and create a launcher (a.k.a., a shortcut) for it to save time in the
-future.
+Use IGV to inspect the fit ([basic instructions for
+TACC](../setup/igv)). Load the indexed Amil-lambda genome, then the
+sorted bam file. You’ll need to zoom into the tracks.
 
 # ToDo:
 

@@ -20,6 +20,9 @@ git clone https://github.com/Christopher-Peterson/hybrid_methylation.git
 
 2.  Setup and configure the [Docker/Singularity images](setup/docker/).
 
+3.  Setup [Integrative Genomics Viewer (IVG)](setup/igv) and associated
+    tools for use on TACC.
+
 ## Whole Genome Bisulfide Sequence Data
 
 1.  [Get the Data, trim the reads, and prepare the reference
