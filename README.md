@@ -23,6 +23,9 @@ git clone https://github.com/Christopher-Peterson/hybrid_methylation.git
 3.  Setup [Integrative Genomics Viewer (IVG)](setup/igv) and associated
     tools for use on TACC.
 
+Contributors to this repository should also follow [these
+instructions](setup/dev)..
+
 ## Whole Genome Bisulfide Sequence Data
 
 1.  [Get the Data, trim the reads, and prepare the reference
