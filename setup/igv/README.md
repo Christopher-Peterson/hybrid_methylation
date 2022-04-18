@@ -1,11 +1,9 @@
 
 # Installing IGV and IGVtools
 
-We’ll be using [IGV](https://igv.org) and the associated commandline
-tools to sanity-check our alignments.
-
-First, download and unzip both IGV (with Java) and the IGV + IGVtools
-bundle (without Java) to TACC.
+We’ll be using [IGV](https://igv.org) and the associated command line
+tools to sanity-check our alignments. First, download and unzip both IGV
+(with Java) and the IGV + IGVtools bundle (without Java) to TACC.
 
 ``` bash
 cdw 
