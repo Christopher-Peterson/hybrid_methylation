@@ -51,6 +51,7 @@ function run_alignment {
   local NAME=$2
   local BASE_DIR=$SCRATCH/hybrid_methylation
   local DIREC=$BASE_DIR/alignment_experiments/$NAME
+  
   if [ -z $NAME ]; then
     echo "Directory name must be suplied as second argument"
   elif [ ! -d $DIREC ]; then
@@ -59,6 +60,51 @@ function run_alignment {
     local WD=$(pwd)
     cd $DIREC
     sbatch slurm/bismark_align_${OPTION}.slurm
+    cd $WD
+  fi
+}
+
+function dedup_alignment {
+  local NAME=$1
+  local BASE_DIR=$SCRATCH/hybrid_methylation
+  local DIREC=$BASE_DIR/alignment_experiments/$NAME
+  local SLURM=bismark_dedup_run.slurm
+  # If the slurm file doesn't exist, copy it from the templates
+  if [ ! -f $DIREC/slurm/$SLURM  ]; then
+    cp $BASE_DIR/alignment_experiments/slurm_templates/$SLURM $DIREC/slurm/$SLURM  
+  fi
+  
+  if [ -z $NAME ]; then
+    echo "Directory name must be suplied as first argument"
+  elif [ ! -d $DIREC ]; then
+    echo "$NAME is not a directory"
+  else
+    local WD=$(pwd)
+    cd $DIREC
+    sbatch slurm/$SLURM
+    cd $WD
+  fi
+}
+
+function vis_tapestry {
+  local NAME=$1
+  local STAGE=${2:-"1"}
+  local BASE_DIR=$SCRATCH/hybrid_methylation
+  local DIREC=$BASE_DIR/alignment_experiments/$NAME
+  local SLURM=vis_tapestry.slurm
+  # If the slurm file doesn't exist, copy it from the templates
+  if [ ! -f $DIREC/slurm/$SLURM  ]; then
+    cp $BASE_DIR/alignment_experiments/slurm_templates/$SLURM $DIREC/slurm/$SLURM  
+  fi
+  
+  if [ -z $NAME ]; then
+    echo "Directory name must be suplied as first argument"
+  elif [ ! -d $DIREC ]; then
+    echo "$NAME is not a directory"
+  else
+    local WD=$(pwd)
+    cd $DIREC
+    STAGE=$STAGE sbatch slurm/$SLURM
     cd $WD
   fi
 }

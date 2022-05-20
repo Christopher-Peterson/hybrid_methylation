@@ -6,6 +6,8 @@ IN_DIR="bams/dedup"
 OUT_DIR="bams/sorted"
 N_CORES=128
 
+mkdir -p $IN_DIR $OUT_DIR
+
 # Sort
 SORT_ARGS="-o $OUT_DIR/$FILE -@$N_CORES $IN_DIR/$FILE"
 samtools sort $SORT_ARGS
