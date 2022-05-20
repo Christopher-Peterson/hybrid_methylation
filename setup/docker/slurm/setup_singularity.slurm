@@ -5,8 +5,8 @@
 #SBATCH -N 1 
 #SBATCH -n 1
 #SBATCH -p development
-#SBATCH -o logs/setup_ref_genome.o
-#SBATCH -e logs/setup_ref_genome.e
+#SBATCH -o logs/setup_sing.o
+#SBATCH -e logs/setup_sing.e
 #SBATCH -t 00:20:00
 #-------------------------------------------------------
 
