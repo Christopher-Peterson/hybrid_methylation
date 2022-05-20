@@ -16,8 +16,10 @@ suppressPackageStartupMessages({
 
 # WGBS Alignment Experiments
 
-This script assumes that you have You have cloned the git repository, [configured Singularity](../setup/docker/), set up [IGV](../setup/igv), and prepared the [WGBS data & genome](../setup/wgbs_setup/).
-Before beginning, make sure everything in `scripts` is executable: 
+This script assumes that you have You have cloned the git repository,
+[configured Singularity](../setup/docker/), set up [IGV](../setup/igv),
+and prepared the [WGBS data & genome](../setup/wgbs_setup/). Before
+beginning, make sure everything in `scripts` is executable:
 
 ```{bash, eval = FALSE, exec = TRUE}
 cds hybrid_methylation
@@ -27,14 +29,14 @@ chmod +x alignment_experiments/scripts/*
 ## Determining Alignment Parameters
 
 Aligning the WGBS sequencing data will be challenging, and there are a
-variety of ways that it can be done. This will begin by testing various bismark parameters.
+variety of ways that it can be done. This will begin by testing various
+bismark parameters.
 
 Key metrics:
 
 -   Mapping efficiency
 -   Methylation context percentages
 -   Conversion efficiency based on lambda DNA spike
-
 
 First, we'll define this function to set up a new experiment
 
@@ -84,7 +86,63 @@ knitr::kable(alignment_table)
 
 Based on these results, `pe_xrelaxed` is the best option that doesn't
 require `local` (e.g., soft-clipping). I'm hesitant about using that
-with WGBS data.
+with WGBS data. However, additional diagnostics are required before
+running everything.
+
+### De-duplicate the BAM files
+
+We need to de-duplicate the bam files from the trials that seemed
+vaguely promising.
+
+```{bash, eval = FALSE, echo = TRUE}
+dedup_alignment pe_xrelaxed
+dedup_alignment pe_relaxed
+dedup_alignment se_relaxed
+dedup_alignment se_xrelaxed
+# dedup_alignment pe_local
+```
+
+Let's verify that file sizes have changed in one of the directories:
+
+```{bash, eval = FALSE, echo = TRUE}
+cds hybrid_methylation/alignment_experiments/pe_xrelaxed
+
+du -h bams/*bam # Original bams
+# Results:
+22G     bams/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.bam
+
+du -h bams/dedup/*bam  # de-duplicated
+# Results:
+16G     bams/dedup/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.bam
+cd ..
+```
+
+### Create the tapestry plots
+
+Tapestry plots are a visualization method for checking how read coverage varies across the genome. This process involves:
+
+  - Sorting and indexing the deduplicated BAM files using samtools.  
+  - Estimating read counts across the genome with IGVtools.
+  - Visualizing the read counts with R and ggplot2.
+
+(Also, the reference genome should be intexed; Go back and add
+this to the genome prep script!)
+
+```{bash, eval = FALSE}
+vis_tapestry pe_xrelaxed
+vis_tapestry pe_relaxed
+vis_tapestry se_relaxed
+vis_tapestry se_xrelaxed
+# vis_tapestry pe_local
+```
+
+
+# ToDo:
+
+  - Lambda Spike?
+  - SNPsplit
+
+## Run full alignment (have been using pe_xrelaxed, but may need to switch)
 
 Run the alignment on all of samples with `pe_xrelaxed`:
 
@@ -95,51 +153,8 @@ run_alignment run pe_xrelaxed
 
 ```
 
-## De-duplicate the BAM files
-
-De-duplicate the bam files. We'll be moving to the `pe_xrelaxed`
+We'll be moving to the `pe_xrelaxed`
 directory and staying there until otherwise noted.
-
-```{bash, eval = FALSE, echo = TRUE}
-cds hybrid_methylation/alignment_experiments/pe_xrelaxed
-
-sbatch slurm/bismark_dedup_run.slurm
-```
-
-Let's verify that file sizes have changed:
-
-```{bash, eval = FALSE, echo = TRUE}
-du -h bams/*bam # Original bams
-# Results:
-15G     bams/lane1-A1-A_S1_L001_1.trim_bismark_bt2_pe.bam
-22G     bams/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.bam
-13G     bams/lane1-A3-C_S3_L001_1.trim_bismark_bt2_pe.bam
-17G     bams/lane1-A4-D_S4_L001_1.trim_bismark_bt2_pe.bam
-16G     bams/lane1-X1-E_S5_L001_1.trim_bismark_bt2_pe.bam
-16G     bams/lane1-X3-F_S6_L001_1.trim_bismark_bt2_pe.bam
-12G     bams/lane2-X2-E_S7_L002_1.trim_bismark_bt2_pe.bam
-14G     bams/lane2-X4-F_S8_L002_1.trim_bismark_bt2_pe.bam
-20G     bams/lane2-X5-A_S9_L002_1.trim_bismark_bt2_pe.bam
-16G     bams/lane2-X6-B_S10_L002_1.trim_bismark_bt2_pe.bam
-12G     bams/lane2-X7-C_S11_L002_1.trim_bismark_bt2_pe.bam
-18G     bams/lane2-X8-D_S12_L002_1.trim_bismark_bt2_pe.bam
-
-du -h bams/dedup/*bam  # de-duplicated
-# Results:
-11G     bams/dedup/lane1-A1-A_S1_L001_1.trim_bismark_bt2_pe.deduplicated.bam
-16G     bams/dedup/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.bam
-9.1G    bams/dedup/lane1-A3-C_S3_L001_1.trim_bismark_bt2_pe.deduplicated.bam
-13G     bams/dedup/lane1-A4-D_S4_L001_1.trim_bismark_bt2_pe.deduplicated.bam
-12G     bams/dedup/lane1-X1-E_S5_L001_1.trim_bismark_bt2_pe.deduplicated.bam
-11G     bams/dedup/lane1-X3-F_S6_L001_1.trim_bismark_bt2_pe.deduplicated.bam
-7.8G    bams/dedup/lane2-X2-E_S7_L002_1.trim_bismark_bt2_pe.deduplicated.bam
-9.6G    bams/dedup/lane2-X4-F_S8_L002_1.trim_bismark_bt2_pe.deduplicated.bam
-13G     bams/dedup/lane2-X5-A_S9_L002_1.trim_bismark_bt2_pe.deduplicated.bam
-11G     bams/dedup/lane2-X6-B_S10_L002_1.trim_bismark_bt2_pe.deduplicated.bam
-8.5G    bams/dedup/lane2-X7-C_S11_L002_1.trim_bismark_bt2_pe.deduplicated.bam
-11G     bams/dedup/lane2-X8-D_S12_L002_1.trim_bismark_bt2_pe.deduplicated.bam
-```
-
 ### Extract Methylation Calls
 
 I tested the methylation extraction script on a single de-duplicated BAM
@@ -191,38 +206,3 @@ cp -r bams/dedup/*bam $WRK/bams/dedup/ &
 cp -r methyl_extract/*{.gz,_summary.txt,M-bias.txt,_splitting_report.txt} $WRK/methyl_extract
 ```
 
-## Sanity Checking the alignment
-
-Before proceeding, we need to check the alignments to make sure that they make sense.
-We'll be using [IGV](https://igv.org) for this.
-Before using IGV, we need to sort and index the deduplicated bam files with samtools.
-(Also, the reference genome should be intexed; Go back and add this to the genome prep script!)
-
-### Sorting the BAM files
-
-First, we're using the sort & index script on a single bam to ensure the script works.
-```{bash, eval=FALSE,echo=TRUE}
-sbatch slurm/sort_trial.slurm
-```
-
-That ran in about 10 minutes, so let's submit the full run.
-
-```{bash, eval=FALSE,echo=TRUE}
-sbatch slurm/sort_run.slurm
-```
-
-### Using IGV 
-
-Use IGV to inspect the fit ([basic instructions for TACC](../setup/igv)).
-Load the indexed Amil-lambda genome, then the sorted bam file.
-You'll need to zoom into the tracks.
-
-
-
-# ToDo:
-
-Sanity checks with IGV viewer
-Try using igvtools to automatically get the "count" of reads at each point, then export them to somethin inR.
-Lambda Spike?
-
-SNPsplit
