@@ -20,3 +20,4 @@ mv $REPORT reports/dedup
 
 # This line works:
 # deduplicate_bismark --output_dir bams/dedup -p --bam bams/lane1-A1-A_S1_L001_1.trim_bismark_bt2_pe.bam
+# deduplicate_bismark --output_dir bams/dedup -p --bam bams/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.bam
