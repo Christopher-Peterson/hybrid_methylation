@@ -11,7 +11,7 @@ preparing the reference genome.
 Copy the files from their archive into a raw data folder and extract it.
 
 ``` bash
-cds hybrid_methylation/wgbs_setup
+cds hybrid_methylation/setup/wgbs_setup
 # Setup raw_data and slurm sub-directories
 mkdir logs jobs raw_data fastqs
 cds raw_data
