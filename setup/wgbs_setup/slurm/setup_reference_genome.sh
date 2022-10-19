@@ -130,5 +130,5 @@ window500bpFile=${GENOME_FOLDER}/windowBoundaries_500bp.bed
 aroundGeneWindowFile=${GENOME_FOLDER}/Amil.coding.gff3_1kb_around_genes.bed" > $OUT_FILE
 
 # Create a symlink to hybrid_methylation/genome.sh
-cds hybrid_methylation
+cd $SCRATCH/hybrid_methylation
 ln -s $OUT_FILE genome.sh

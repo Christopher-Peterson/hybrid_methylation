@@ -49,7 +49,13 @@ new_alignment_experiment pe_default "pe" " "
 new_alignment_experiment se_default "se" " "
 new_alignment_experiment pe_relaxed "pe" "-N 1 --score_min L,0,-0.6"
 new_alignment_experiment se_relaxed "se" "-N 1 --score_min L,0,-0.6"
-new_alignment_experim ent pe_xrelaxed "pe" "-N 1 --score_min L,0,-0.8"
+new_alignment_experiment pe_xrelaxed "pe" "-N 1 --score_min L,0,-0.8"
+new_alignment_experiment pe_xrelaxed2 "pe" "-N 1 --score_min L,0,-0.8" "Amilsel"
+new_alignment_experiment pe_xrelaxed_staged "pe" "-N 1 --score_min L,0,-0.8 -un" "Amil" "Asel"
+new_alignment_experiment pe_xrelaxed_rev "pe" "-N 1 --score_min L,0,-0.8 -un" "Asel" "Amil"
+
+
+new_alignment_experiment pe_yrelaxed "pe" "-N 1 --score_min L,0,-1.0"
 new_alignment_experiment se_xrelaxed "se" "-N 1 --score_min L,0,-0.8"
 new_alignment_experiment pe_local "pe" "-N 1 --local"
 new_alignment_experiment se_local "se" "-N 1 --local"
@@ -58,10 +64,13 @@ new_alignment_experiment se_local_relax "se" "-N 1 --local --score_min G,0,-0.6"
 
 # Run the alignment trials
 run_alignment trial pe_default
-run_alignment trial se_default
+#run_alignment trial se_default
 run_alignment trial pe_relaxed
-run_alignment trial se_relaxed
-run_alignment trial pe_xrelaxed
+#run_alignment trial se_relaxed
+run_alignment run  pe_xrelaxed_staged
+run_alignment run  pe_xrelaxed_rev
+
+run_alignment trial pe_yrelaxed
 run_alignment trial se_xrelaxed
 run_alignment trial pe_local
 run_alignment trial se_local
@@ -99,7 +108,9 @@ dedup_alignment pe_xrelaxed
 dedup_alignment pe_relaxed
 dedup_alignment se_relaxed
 dedup_alignment se_xrelaxed
-# dedup_alignment pe_local
+dedup_alignment pe_local
+dedup_alignment pe_yrelaxed
+
 ```
 
 Let's verify that file sizes have changed in one of the directories:
@@ -133,7 +144,8 @@ vis_tapestry pe_xrelaxed
 vis_tapestry pe_relaxed
 vis_tapestry se_relaxed
 vis_tapestry se_xrelaxed
-# vis_tapestry pe_local
+vis_tapestry pe_local
+vis_tapestry pe_yrelaxed
 ```
 
 
@@ -149,8 +161,8 @@ Run the alignment on all of samples with `pe_xrelaxed`:
 ```{bash, eval = FALSE, echo = TRUE}
 # First, modify the run slurm file to have 5 hours, just to be safe
 # Then, run the full alignment
-run_alignment run pe_xrelaxed
-
+run_alignment run pe_xrelaxed2
+dedup_alignment pe_xrelaxed2
 ```
 
 We'll be moving to the `pe_xrelaxed`

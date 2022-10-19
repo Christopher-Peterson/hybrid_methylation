@@ -6,6 +6,7 @@
 # First argument:
 FILE1=${1:-lane1-A1-A_S1_L001_1.trim}
 FILE2=${2:-lane1-A1-A_S1_L001_2.trim}
+GENOME=${3:-genome.sh} # Could also be genome2.sh
 
 N_CORE=${N_CORE:-24} # Adjust via passing env variables
 # Loads GENOME_FILE
@@ -14,7 +15,7 @@ PARMS=${PARMS:-""}
 BASE_DIR=$SCRATCH/hybrid_methylation
 LOCAL_DIR=$(pwd)
 
-source $BASE_DIR/genome.sh
+source $GENOME
 
 # Temporary directory should either be on /tmp or /scratch
 mkdir -p ${TEMP_DIR:=/tmp/bismark} # Pass TEMP_DIR as an env variable to change

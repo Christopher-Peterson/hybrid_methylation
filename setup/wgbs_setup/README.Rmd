@@ -1,9 +1,9 @@
 ---
   output: github_document
 ---
-  
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-  
+
 ```{r, include = FALSE, echo = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -18,21 +18,27 @@ This section documents acquiring the WBGS reads, trimming them, and preparing th
 ## Acquire the data files
 
 Copy the files from their archive into a raw data folder and extract it.
+
 ```{bash, eval = FALSE, echo = TRUE}
-cds hybrid_methylation/wgbs_setup
+cds hybrid_methylation/setup/wgbs_setup
 # Setup raw_data and slurm sub-directories
-mkdir logs jobs raw_data fastqs
-cds raw_data
+mkdir logs jobs raw_data raw_data/fastqs
+cd raw_data
 
 # Copy data from Grove's archive
 cp  /corral-repl/utexas/tagmap/dixon_backups/file_sharing_test_dir/JA20120.tar.gz .
 
 # Untar
-tar –xvzf JA20120.tar.gz
+tar –xvzf JA20120.tar.gz &
+
 cd JA20120_download
+
 # There should be 12 directories in here
 ls | wc -l # 13
 rm *json # Remove an unneeded json file
+
+# move these things...
+
 ```
 
 Each of these directories contains two `fasta.gz` files (the paired ends); move them to a new, single directory and unzip them.
@@ -63,7 +69,7 @@ Create a symbolic link in the main `$SCRATCH` directory for easier access.
 cds hybrid_methylation
 mkdir reads
 cd reads
-ln -s ../wgbs_setup/raw_data/fastqs raw
+ln -s ../setup/wgbs_setup/raw_data/fastqs raw
 ```
 
 ## Trim the reads
@@ -74,7 +80,7 @@ First, we're going to create a subset of the fastqs to test the trimming on:
 
 ```{bash, eval = FALSE, echo = TRUE}
 NTEST=1000000 # Size of test in lines
-cds hybrid_methylation/wgbs_setup
+cds hybrid_methylation/setup/wgbs_setup
 
 mkdir -p trim_test/fastqs
 # Copy the first part of each file
@@ -94,6 +100,7 @@ sbatch slurm/trim_pe_test.slurm
 ```
 
 Once that's done, run the fastqc on both sets of test data.
+
 ```{bash, eval = FALSE, echo = TRUE}
 mkdir trim_test/fastqc_results
 sbatch slurm/fastqc_test.slurm
@@ -103,7 +110,8 @@ sbatch slurm/fastqc_test.slurm
 
 ### Trim the whole reads
 
-The full fastq's should take around 20-30 minutes to trim.  
+The full fastq's should take around 20-30 minutes to trim.
+
 ```{bash, eval = FALSE, echo = TRUE}
 sbatch slurm/trim_pe_full.slurm
 
@@ -115,12 +123,64 @@ They should end up in the `reads/trimmed` directory
 
 ## Prepare the Reference Genome
 
-Most of the work for this is done by the slurm script.
-First, the script files need to have their permissions enabled.
+Most of the work for this is done by the slurm script. First, the script files need to have their permissions enabled.
 
 ```{bash, eval = FALSE, echo = TRUE}
 chmod +x scripts/*py
-sbatch slurm/setup_reference_genome.sh # This one ends in .sh because it's more of a regular script that just happens to work best on slurm
+sbatch slurm/setup_reference_genome_amilsel.sh # This one ends in .sh because it's more of a regular script that just happens to work best on slurm
 ```
 
 This will create a `genomes.sh` script in the main hybrid_methylation directory that can be sourced by other scripts.
+
+### Create a Bismarkified version of Chromosome 1 for test mapping
+
+For testing purposes, we will also create a version of the reference genome that's only for chromosome 1. First, we need to split the genome into individual chromosomes. Version 2.1 of the *A. mil* genome has 14 chromosomes and 840 unplaced elements. We will only focus on the chromosomes.
+
+```{bash, eval = FALSE}
+####### new Script
+# Create the directory for the chromosomes
+mkdir $SCRATCH/hybrid_methylation/genomes/Amil_v2.1_chrs
+cd $SCRATCH/hybrid_methylation/genomes/Amil_v2.1_chrs
+
+GENOME_FASTA=../Amil_v2.1/GCF_013753865.1_Amil_v2.1_genomic.fna 
+
+# Use csplit to split the genome file into 
+# context-determined pieces, with new filenames xx00, xx01, ...
+# -s  silent
+# -z Suppress generation fo zero-length outputs
+# This treats both />/ and {*} as splitting patterns
+
+csplit -s -z $GENOME_FASTA  '/>/' '{*}'
+
+# The first 14 files are the chromosomes
+for i in {xx0?,xx1[0-3]} # first 14 chromosomes
+do 
+  # Extract the chromosome number
+  n=$(head $i -n1 | sed 's/.*chromosome //; s/,.*//')
+  # Rename chromosomes
+  mv "$i" "chr_$n.fasta"
+done
+# Move the unplaced scaffold files
+mkdir unplaced_scaffolds
+mv xx* unplaced_scaffolds
+# Renamed these to their scaffold numbers
+cd unplaced_scaffolds
+for i in xx* 
+do 
+  name=$(head $i -n1 | sed 's/.*Amil_v2.1 //; s/,.*//')
+  mv "$i" "$name.fasta"
+done
+cd ..
+```
+
+Now, we'll run the bismark prep script on just chromosome 1.
+
+```{bash, eval = FALSE}
+# Copy chr1 to new directory
+mkdir ../Amil_chr1
+cp chr_1.fasta ../Amil_chr1
+
+# Convert to bismark style genome
+SLURM_DIR=$SCRATCH/hybrid_methylation/setup/wgbs_setup/slurm
+sbatch $SLURM_DIR/setup_split_chrom_genome.sh
+```

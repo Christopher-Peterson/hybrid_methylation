@@ -2,10 +2,12 @@
 # source these into bash before running experiments
 # Save as alignment_experiments/functions.sh
 function new_alignment_experiment {
-  # Args: Name, pe/se, parameters (in quotes)
+  # Args: Name, pe/se, parameters (in quotes), genome (without the '.sh')
   local NAME=$1
   local TYPE=${2:-"pe"} # Should be pe or se for paired or single ends
   local BISMARK_PARMS=${3:-"-q -N 1 --score-min L,0,-0.6"} # Parms to pass to bismark; should be quoted
+  local GENOME=${4:-"Amil"}.sh
+  local GENOME2=${5:-"Asel"}.sh
   
   # Setup the folder structure
   local WD=$(pwd)
@@ -40,6 +42,10 @@ function new_alignment_experiment {
   # symlink the important names
   ln -s $BASE_DIR/alignment_experiments/scripts scripts
   ln -s $BASE_DIR/reads reads
+  
+  # copy the genome(s) in 
+  ln -s $BASE_DIR/genomes/$GENOME genome.sh
+  ln -s $BASE_DIR/genomes/$GENOME2 genome2.sh
   
   # Done
   echo "$NAME set up with TYPE = $TYPE, parameters $BISMARK_PARMS"
