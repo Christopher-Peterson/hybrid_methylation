@@ -3,10 +3,11 @@
 
 FILE=$1
 OUT_DIR=${2:-"methyl_extract"}
+GENOME=${3:-genome.sh} # Could also be genome2.sh
 
 BASE_DIR=$SCRATCH/hybrid_methylation
 LOCAL_DIR=$(pwd)
-source $BASE_DIR/genome.sh
+source $LOCAL_DIR/$GENOME
 
 ## Figure out arguments ####
 # Number of parallel cores

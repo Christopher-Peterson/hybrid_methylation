@@ -4,6 +4,10 @@
 
 # First argument:
 FILE=${1:-lane1-A1-A_S1_L001_2.trim}
+FILE2=${2:-lane1-A1-A_S1_L001_2.trim}
+GENOME=${3:-genome.sh} # Could also be genome2.sh
+
+
 module unload xalt
 # module load launcher
 # export LAUNCHER_WORKDIR=`pwd`
@@ -16,7 +20,7 @@ N_CORE=${N_CORE:-32} # Adjust via passing env variables
 BASE_DIR=$SCRATCH/hybrid_methylation
 SAVE_DIR=`pwd`
 
-source $BASE_DIR/genome.sh
+source $SAVE_DIR/$GENOME
 # source $BASE_DIR/singularity_aliases.sh
 
 # We're running this on /tmp to increase speed
