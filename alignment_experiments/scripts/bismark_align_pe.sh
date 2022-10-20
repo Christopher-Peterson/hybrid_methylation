@@ -15,7 +15,7 @@ PARMS=${PARMS:-""}
 BASE_DIR=$SCRATCH/hybrid_methylation
 LOCAL_DIR=$(pwd)
 
-source $SAVE_DIR/$GENOME
+source $LOCAL_DIR/$GENOME
 
 # Temporary directory should either be on /tmp or /scratch
 mkdir -p ${TEMP_DIR:=/tmp/bismark} # Pass TEMP_DIR as an env variable to change
