@@ -32,11 +32,11 @@ module unload xalt
 
 # I'm having some alias issues
 # Irksome
-singularity exec -H /home \
-  /work/04386/crpeters/ls6/nextflow/work/singularity/nfcore-methylseq-1.6.1.img \
-  bismark_methylation_extractor \
-  $ENDS_ARG $FOLDER_ARGS $SCAFFOLD_ARGS $OUTPUT_ARGS $PROCESSES $FILE
+# singularity exec -H /home \
+#   /work/04386/crpeters/ls6/nextflow/work/singularity/nfcore-methylseq-1.6.1.img \
+#   bismark_methylation_extractor \
+#   $ENDS_ARG $FOLDER_ARGS $SCAFFOLD_ARGS $OUTPUT_ARGS $PROCESSES $FILE
 
-# bismark_methylation_extractor $ENDS_ARG $FOLDER_ARGS $SCAFFOLD_ARGS $OUTPUT_ARGS $PROCESSES $FILE
+bismark_methylation_extractor $ENDS_ARG $FOLDER_ARGS $SCAFFOLD_ARGS $OUTPUT_ARGS $PROCESSES $FILE
 
 # Should probably add some cleanup to this afterward

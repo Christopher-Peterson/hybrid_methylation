@@ -9,11 +9,12 @@ function singularity_mask {
   local BIN_NAME=$1
   local SIF=$2 # Should contain whole path
   local CMD=${3:-$BIN_NAME}
+  local HDIR=${4:-/home}
   local BIN=$WORK/singularity/bin/$BIN_NAME
   # Setup the base of the file
   echo "#!/bin/bash
     module load tacc-singularity 
-    HDIR=/home
+    HDIR=$HDIR
     IMAGE=$SIF
     CMD=$CMD" > $BIN
   # Add the final line using single quotes, to avoid escaping

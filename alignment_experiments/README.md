@@ -19,9 +19,9 @@ bismark parameters.
 
 Key metrics:
 
--   Mapping efficiency
--   Methylation context percentages
--   Conversion efficiency based on lambda DNA spike
+- Mapping efficiency
+- Methylation context percentages
+- Conversion efficiency based on lambda DNA spike
 
 First, we’ll define this function to set up a new experiment
 
@@ -47,8 +47,18 @@ new_alignment_experiment se_local "se" "-N 1 --local"
 new_alignment_experiment pe_local_relax "pe" "-N 1 --local --score_min G,0,-0.6"
 new_alignment_experiment se_local_relax "se" "-N 1 --local --score_min G,0,-0.6"
 
+new_alignment_experiment ldr_vs "pe" "-N 1 -L 20 -R 3 -D 20 --score_min L,0,-0.6"
+
+new_alignment_experiment ldr_vs3 "pe" "-N 1 -D 30 -R 4 -L 17  --score_min L,0,-0.8"
+
+# This one is for using w/ bismark2
+new_alignment_experiment pe_xr2 "pe" "-N 1 --score_min L,0,-0.8"
+
+new_alignment_experiment pe_xrs "pe" "-N 1 --score_min L,0,-0.8 -s 5"
+
+
 # Run the alignment trials
-run_alignment trial pe_default
+run_alignment trial pe_xr2
 #run_alignment trial se_default
 run_alignment trial pe_relaxed
 #run_alignment trial se_relaxed
@@ -120,9 +130,9 @@ cd ..
 Tapestry plots are a visualization method for checking how read coverage
 varies across the genome. This process involves:
 
--   Sorting and indexing the deduplicated BAM files using samtools.  
--   Estimating read counts across the genome with IGVtools.
--   Visualizing the read counts with R and ggplot2.
+- Sorting and indexing the deduplicated BAM files using samtools.  
+- Estimating read counts across the genome with IGVtools.
+- Visualizing the read counts with R and ggplot2.
 
 (Also, the reference genome should be intexed; Go back and add this to
 the genome prep script!)
@@ -138,8 +148,7 @@ vis_tapestry pe_yrelaxed
 
 # ToDo:
 
--   Lambda Spike?
--   SNPsplit
+- Lambda Spike?
 
 ## Run full alignment (have been using pe_xrelaxed, but may need to switch)
 
@@ -148,11 +157,11 @@ Run the alignment on all of samples with `pe_xrelaxed`:
 ``` bash
 # First, modify the run slurm file to have 5 hours, just to be safe
 # Then, run the full alignment
-run_alignment run pe_xrelaxed2
-dedup_alignment pe_xrelaxed2
+run_alignment run pe_xr2
+dedup_alignment pe_xr2
 ```
 
-We’ll be moving to the `pe_xrelaxed` directory and staying there until
+We’ll be moving to the `pe_xr2` directory and staying there until
 otherwise noted. \### Extract Methylation Calls
 
 I tested the methylation extraction script on a single de-duplicated BAM
@@ -202,4 +211,50 @@ cp -r bams/dedup/*bam $WRK/bams/dedup/ &
 
 # Backup extracted methylation information
 cp -r methyl_extract/*{.gz,_summary.txt,M-bias.txt,_splitting_report.txt} $WRK/methyl_extract
+```
+
+### Pipeline counts
+
+We want to get read counts for each step of this process
+
+``` bash
+cds hyb*/align*/pe_xr2
+
+# Output Files
+pc_trim=pipeline_counts_trim.tsv
+pc_bam=pipeline_counts_bam.tsv
+pc_dedup=pipeline_counts_dedup.tsv
+
+# Raw and trimmed reads are found in the trim galore report
+# Raw Reads
+echo -e "#ID\tpair\tcolumn\tcount" > $pc_trim
+trim_pat="(Total reads processed|Reads with adapters|Reads written)"
+grep -P "$trim_pat" `ls reads/trimmed/*report.txt` | 
+sed  -e 's|reads/trimmed/lane.-|| # Remove dirname' \
+  -e 's/_001.fastq_trimming_report.txt:/\t/ # Replace filename tail w/ tab' \
+  -e 's/-._S[0-9]\+_L00._R/\t/ # Remove middle section between ID and read pair' \
+  -e 's/[0-9]\+\.[0-9]%// # Remove percentage' -e 's|()|| # Remove empty paren' \
+  -e 's/,//g # Strip commas from numbers' \
+  -e 's|[[:blank:]][[:blank:]]\+|\t| # Trim excess white space'  >> $pc_trim
+
+# Bam report
+bam_pat="(Sequence pairs analysed in total|Number of paired-end alignments with a unique best hit)"
+echo -e "#ID\tcolumn\tcount" > $pc_bam
+grep -P "$bam_pat" reports/*txt | \
+  sed  -e 's|reports/lane1-|| # remove dirname' \
+  -e 's|-.*.txt:|\t| # Remove tail'  \
+  -e 's|[[:blank:]][[:blank:]]\+|\t| # Trim excess white space' >> $pc_bam
+
+# Dedup report
+dedup_pat='(Total number of alignments|Total count of deduplicated leftover sequences)'
+echo -e "#ID\tcolumn\tcount" > $pc_dedup
+grep -P "$dedup_pat" reports/dedup/*txt | \
+  sed -e 's|reports/dedup/lane1-|| # remove dirname' \
+  -e 's|-.\+.txt|| # remove tail of file name' \
+  -e 's| in bams/.\+.bam|| # Remove bam name' \
+  -e 's/[0-9]\+.[0-9]\+% of total//' -e 's|()|| # Remove parenthetical part'  \
+  -e 's/:/\t/g # fix field separation' \
+  -e 's|[[:blank:]][[:blank:]]\+|\t| # Trim excess white space' >> $pc_dedup
+
+# Dedup report
 ```

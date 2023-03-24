@@ -16,29 +16,122 @@
 cdw singularity
 # Install singularity images
 ml tacc-singularity
+module unload xalt
 singularity pull -F docker://crpeters/trim_galore:0.6.7 &
 singularity pull -F docker://crpeters/bedtools &
 singularity pull -F docker://biopython/biopython:latest &
-singularity pull -F docker://crpeters/r-tidyverse-optparse:4.1.2 &
+singularity pull -F docker://crpeters/r-tidyverse-optparse:4.2.1 &
+singularity pull -F docker://crpeters/r-plotting:4.2.1 &
+singularity pull -F docker://biocontainers/pysam:v0.15.2ds-2-deb-py3_cv1 &
+# singularity pull -F docker://staphb/freebayes:1.3.6 &
+# singularity pull -F docker://biocontainers/freebayes:v1.2.0-2-deb_cv1 &
+# singularity pull -F docker://crpeters/snpsplit:0.5.0 &
+singularity pull  --name nfcore-methylseq-1.6.1.img docker://nfcore/methylseq:1.6.1 &
+singularity pull -F docker://biocontainers/freebayes:v1.2.0-2-deb_cv1 &
+singularity pull -F docker://biocontainers/bamtools:v2.5.1dfsg-3-deb_cv1 &
+singularity pull -F docker://crpeters/angsd:0.940-stable &
+singularity pull -F docker://staphb/bcftools:1.16 &
+singularity pull -F docker://crpeters/batmeth2:latest &
+singularity pull -F docker://crpeters/methhaplo:latest &
+singularity pull -F docker://crpeters/edge-trait-meta:4.2.0 &
+
+singularity pull -F docker://crpeters/inform_me_jl:latest &
+singularity pull -F docker://crpeters/r-methylkit:4.2.1 &
+
+singularity pull -F docker://crpeters/whatshap:1.7 &
+
 # singularity pull -F docker://crpeters/seqmonk:latest &
+# Epidiverse SNP pipeline
+# singularity pull --name epidiverse-snp-1.0.simg docker://epidiverse/snp:1.0
 
 # add in methylseq
 # Install nextcore
-curl -fsSL get.nextflow.io | bash
-mv nextflow ~/bin/
-# Install methylseq 
-nextflow run nf-core/methylseq -profile test,singularity 
+# curl -fsSL get.nextflow.io | bash
+# This is an old version that works w/ TACC's JRE
+# wget https://github.com/nextflow-io/nextflow/releases/download/v21.10.2/nextflow-21.10.2-all
+# chmod +x nextflow-21.10.2-all
+# mv nextflow-21.10.2-all ~/bin/nextflow
+# 
+# # Install methylseq 
+# nextflow run nf-core/methylseq -profile test,singularity
+# nextflow
+
 
 # Create the binary wrappers for each of them
-source singularity_mask.sh
+source $WORK/singularity/singularity_mask.sh
 
 singularity_mask bedtools $WORK/singularity/bedtools_latest.sif
-singularity_mask bismark $WORK/nextflow/work/singularity/nfcore-methylseq-1.6.1.img
-singularity_mask samtools $WORK/nextflow/work/singularity/nfcore-methylseq-1.6.1.img
-singularity_mask bismark_genome_preparation $WORK/nextflow/work/singularity/nfcore-methylseq-1.6.1.img
+singularity_mask bismark $WORK/singularity/nfcore-methylseq-1.6.1.img
+singularity_mask bowtie2 $WORK/singularity/nfcore-methylseq-1.6.1.img
+singularity_mask bowtie2-build $WORK/singularity/nfcore-methylseq-1.6.1.img
+singularity_mask samtools $WORK/singularity/nfcore-methylseq-1.6.1.img
+singularity_mask bgzip $WORK/singularity/nfcore-methylseq-1.6.1.img
+singularity_mask tabix $WORK/singularity/nfcore-methylseq-1.6.1.img
+
+
+# singularity_mask bcftools $WORK/singularity/nfcore-methylseq-1.6.1.img
+
+singularity_mask bismark_genome_preparation $WORK/singularity/nfcore-methylseq-1.6.1.img
+singularity_mask deduplicate_bismark $WORK/singularity/nfcore-methylseq-1.6.1.img
+singularity_mask bismark_methylation_extractor $WORK/singularity/nfcore-methylseq-1.6.1.img
 singularity_mask cutadapt $WORK/singularity/trim_galore_0.6.7.sif
+singularity_mask trim_galore $WORK/singularity/trim_galore_0.6.7.sif
 singularity_mask fastqc $WORK/singularity/trim_galore_0.6.7.sif
+singularity_mask angsd $WORK/singularity/angsd_0.940-stable.sif
+
+singularity_mask bcftools $WORK/singularity/bcftools_1.16.sif
+
 singularity_mask biopython $WORK/singularity/biopython_latest.sif python3
-singularity_mask r-tidy-opt $WORK/singularity/r-tidyverse-optparse_4.1.2.sif Rscript
-singularity_mask deduplicate_bismark $WORK/nextflow/work/singularity/nfcore-methylseq-1.6.1.img
-singularity_mask bismark_methylation_extractor $WORK/nextflow/work/singularity/nfcore-methylseq-1.6.1.img
+singularity_mask r-tidy-opt $WORK/singularity/r-tidyverse-optparse_4.2.1.sif Rscript
+singularity_mask r-plotting $WORK/singularity/r-plotting_4.2.1.sif Rscript
+
+singularity_mask r-methylkit $WORK/singularity/r-methylkit_4.2.1.sif Rscript
+# singularity_mask r-brms $WORK/singularity/edge-trait-meta_4.2.0.sif Rscript
+singularity_mask pysam $WORK/singularity/pysam_v0.15.2ds-2-deb-py3_cv1.sif python3
+
+singularity_mask whatshap $WORK/singularity/whatshap_1.7.sif
+
+
+# singularity_mask freebayes $WORK/singularity/freebayes_v1.2.0-2-deb_cv1.sif
+# singularity_mask bamtools $WORK/singularity/bamtools_v2.5.1dfsg-3-deb_cv1.sif
+# 
+# singularity_mask methHaplo $WORK/singularity/methhaplo_latest.sif /MethHaplo/bin/methHaplo
+# singularity_mask ASManno $WORK/singularity/methhaplo_latest.sif /MethHaplo/bin/ASManno
+# singularity_mask ASMannoSites $WORK/singularity/methhaplo_latest.sif /MethHaplo/bin/ASMannoSites
+# singularity_mask ASM $WORK/singularity/methhaplo_latest.sif /MethHaplo/bin/ASM
+# singularity_mask bam2md $WORK/singularity/methhaplo_latest.sif /MethHaplo/bin/ASM
+
+# 
+# singularity_mask BatMeth2 $WORK/singularity/batmeth2_latest.sif
+# singularity_mask fastp $WORK/singularity/batmeth2_latest.sif /data/fastp/fastp
+# singularity_mask calmeth $WORK/singularity/batmeth2_latest.sif
+# singularity_mask batDMR $WORK/singularity/batmeth2_latest.sif
+
+
+# singularity_mask freebayes-parallel $WORK/singularity/freebayes_v1.2.0-2-deb_cv1.sif
+# singularity_mask fb-python  $WORK/singularity/freebayes_v1.2.0-2-deb_cv1.sif python
+
+# singularity_mask SNPsplit $WORK/singularity/snpsplit_0.5.0.sif /SNPsplit-0.5.0/SNPsplit
+# singularity_mask tag2sort $WORK/singularity/snpsplit_0.5.0.sif /SNPsplit-0.5.0/tag2sort
+# singularity_mask SNPsplit_genome_preparation $WORK/singularity/snpsplit_0.5.0.sif
+
+
+
+
+# 
+# # singularity_mask
+# # # # For testing, here's the commands to run run shells in singularity
+function live_test {
+  # Don't run this; it's been wrapped in a function to prevent execution
+ # cdw singularity
+  module load tacc-singularity
+  module unload xalt
+  # HDIR=/home/julia
+  HDIR=/home
+  IMAGE=$WORK/singularity/r-tidyverse-optparse_4.2.1.sif
+  IMAGE=$WORK/singularity/r-plotting_4.2.1.sif
+  # IMAGE=$WORK/singularity/r-methylkit_4.1.2.sif
+  singularity shell -H $HDIR $IMAGE
+  R
+  # # # 
+}

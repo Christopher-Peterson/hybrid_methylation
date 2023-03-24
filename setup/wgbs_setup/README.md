@@ -99,8 +99,6 @@ mkdir trim_test/fastqc_results
 sbatch slurm/fastqc_test.slurm
 ```
 
-(Look at the results some time.)
-
 ### Trim the whole reads
 
 The full fastq’s should take around 20-30 minutes to trim.
@@ -113,6 +111,30 @@ ls $SCRATCH/hybrid_methylation/reads/trimmed | wc -l # 24
 ```
 
 They should end up in the `reads/trimmed` directory
+
+### Alternate trimming with Trim Galore
+
+I’m trying an alternate trimming method (Trim Galore) in an attempt to
+improve alignment quality.
+
+``` bash
+sbatch slurm/trim_galore_pe_full.slurm
+
+# This produces trim files with the wrong name; adjust them to have the same names as the previous trim files
+<!-- ( ADD to the slurm) -->
+<!-- for fq in raw_data/trimmed/*fq; do -->
+function rename_file {
+  local a=$1
+  local b=${a/_val/}
+  local c=${b/.fq/}
+  mv $a $c
+}
+
+for fq in reads/trimmed/*2.trim; 
+  do mv $fq ${fq/_001_2.trim/.trim}; done
+  # Too lazy to remember normal double variable substitution/modificaiton, so here's a bootleg version
+done
+```
 
 ## Prepare the Reference Genome
 

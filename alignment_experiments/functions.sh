@@ -1,6 +1,13 @@
 # A Set of functions to be used for setting up experiments
 # source these into bash before running experiments
 # Save as alignment_experiments/functions.sh
+
+function sbatch_job {
+  # Like sbatch, but only returns the job id; good for queuing
+  local job=`sbatch "${@}" | grep "Submitted batch job" | grep -Po "[0-9]+$" `
+  echo $job
+}
+
 function new_alignment_experiment {
   # Args: Name, pe/se, parameters (in quotes), genome (without the '.sh')
   local NAME=$1
@@ -15,7 +22,7 @@ function new_alignment_experiment {
   mkdir -p $BASE_DIR/alignment_experiments/$NAME
   cd $BASE_DIR/alignment_experiments/$NAME
   mkdir slurm logs jobs temp bams reports config methyl_extract 
-  mkdir bams/dedup reports/dedup bams/sorted
+  mkdir bams/dedup reports/dedup bams/sorted bams/align2 reports/align2
   # Save some basic configuration details
   echo $TYPE > config/ends.type
   echo $BISMARK_PARMS > config/bismark.parms
@@ -28,7 +35,7 @@ function new_alignment_experiment {
   local TRIAL_NAME="align_trial_$NAME"
   if [ $TYPE == "pe" ]; then 
     local RUN_NODES="11"
-    local RUN_TIME='04:00:00' # Must be in single quotes to avoid escapes
+    local RUN_TIME='05:00:00' # Must be in single quotes to avoid escapes
   else
     local RUN_NODES="12"
     local RUN_TIME='07:00:00' # Must be in single quotes to avoid escapes
@@ -36,8 +43,9 @@ function new_alignment_experiment {
   sed -e "s/sed_TIME/$RUN_TIME/g" \
       -e "s/sed_NODES/$RUN_NODES/g" \
       -e "s/sed_NAME/$RUN_NAME/g" \
-  -i slurm/bismark_align_run.slurm
-  sed "s/sed_NAME/$TRIAL_NAME/g" -i slurm/bismark_align_trial.slurm
+    -i slurm/bismark_align_run.slurm slurm/bismark_align2_run.slurm
+  sed "s/sed_NAME/$TRIAL_NAME/g" \
+    -i slurm/bismark_align_trial.slurm slurm/bismark_align2_trial.slurm
   
   # symlink the important names
   ln -s $BASE_DIR/alignment_experiments/scripts scripts
@@ -55,9 +63,13 @@ function new_alignment_experiment {
 function run_alignment {
   local OPTION=${1:-"trial"} # OR run
   local NAME=$2
+  local afterok=$3
   local BASE_DIR=$SCRATCH/hybrid_methylation
   local DIREC=$BASE_DIR/alignment_experiments/$NAME
   
+  if [ -z $afterok ]; then
+    afterok="-d afterok:${afterok}"
+  fi
   if [ -z $NAME ]; then
     echo "Directory name must be suplied as second argument"
   elif [ ! -d $DIREC ]; then
@@ -65,7 +77,7 @@ function run_alignment {
   else
     local WD=$(pwd)
     cd $DIREC
-    sbatch slurm/bismark_align_${OPTION}.slurm
+    sbatch slurm/bismark_align_${OPTION}.slurm $afterok
     cd $WD
   fi
 }
@@ -91,7 +103,7 @@ function dedup_alignment {
     cd $WD
   fi
 }
-
+# Add a sort run version of this
 function vis_tapestry {
   local NAME=$1
   local STAGE=${2:-"1"}

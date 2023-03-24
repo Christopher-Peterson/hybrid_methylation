@@ -62,7 +62,7 @@ export LAUNCHER_JOB_FILE=jobs/bismark_run
 
 # Create the job file
 # Assemble the commands
-for file in reads/trimmed/*_1.trim
+for file in reads/trimmed/lane1-A*_1.trim
   do setup_job $file
 done
 
