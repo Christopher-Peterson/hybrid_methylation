@@ -46,4 +46,8 @@ dss/out/
 dss/figures
 dss/model_data
 dss/slurm/old
+figures/data
+figures/dss
+figures/main
+
 
