@@ -38,3 +38,12 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# TEMPORARY FILES IN DSS
+dss/temp/
+temp/
+dss/out/
+dss/figures
+dss/model_data
+dss/slurm/old
+
