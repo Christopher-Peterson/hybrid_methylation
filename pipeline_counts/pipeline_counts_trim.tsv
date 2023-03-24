@@ -1,0 +1,73 @@
+#ID	pair	column	count
+A1	1	Total reads processed:	147160730
+A1	1	Reads with adapters:	102886410 
+A1	1	Reads written (passing filters):	147160730 
+A1	2	Total reads processed:	147160730
+A1	2	Reads with adapters:	104192646 
+A1	2	Reads written (passing filters):	147160730 
+A2	1	Total reads processed:	214656052
+A2	1	Reads with adapters:	161925658 
+A2	1	Reads written (passing filters):	214656052 
+A2	2	Total reads processed:	214656052
+A2	2	Reads with adapters:	159797470 
+A2	2	Reads written (passing filters):	214656052 
+A3	1	Total reads processed:	125441416
+A3	1	Reads with adapters:	85168714 
+A3	1	Reads written (passing filters):	125441416 
+A3	2	Total reads processed:	125441416
+A3	2	Reads with adapters:	84928722 
+A3	2	Reads written (passing filters):	125441416 
+A4	1	Total reads processed:	168249110
+A4	1	Reads with adapters:	116629320 
+A4	1	Reads written (passing filters):	168249110 
+A4	2	Total reads processed:	168249110
+A4	2	Reads with adapters:	115323873 
+A4	2	Reads written (passing filters):	168249110 
+X1	1	Total reads processed:	159135623
+X1	1	Reads with adapters:	107575302 
+X1	1	Reads written (passing filters):	159135623 
+X1	2	Total reads processed:	159135623
+X1	2	Reads with adapters:	106255561 
+X1	2	Reads written (passing filters):	159135623 
+X3	1	Total reads processed:	146332453
+X3	1	Reads with adapters:	100015723 
+X3	1	Reads written (passing filters):	146332453 
+X3	2	Total reads processed:	146332453
+X3	2	Reads with adapters:	101664664 
+X3	2	Reads written (passing filters):	146332453 
+X2	1	Total reads processed:	136931623
+X2	1	Reads with adapters:	94049700 
+X2	1	Reads written (passing filters):	136931623 
+X2	2	Total reads processed:	136931623
+X2	2	Reads with adapters:	94066417 
+X2	2	Reads written (passing filters):	136931623 
+X4	1	Total reads processed:	163997878
+X4	1	Reads with adapters:	133278192 
+X4	1	Reads written (passing filters):	163997878 
+X4	2	Total reads processed:	163997878
+X4	2	Reads with adapters:	130945140 
+X4	2	Reads written (passing filters):	163997878 
+X5	1	Total reads processed:	181872367
+X5	1	Reads with adapters:	147011418 
+X5	1	Reads written (passing filters):	181872367 
+X5	2	Total reads processed:	181872367
+X5	2	Reads with adapters:	148280267 
+X5	2	Reads written (passing filters):	181872367 
+X6	1	Total reads processed:	158748580
+X6	1	Reads with adapters:	106694443 
+X6	1	Reads written (passing filters):	158748580 
+X6	2	Total reads processed:	158748580
+X6	2	Reads with adapters:	106596196 
+X6	2	Reads written (passing filters):	158748580 
+X7	1	Total reads processed:	132922151
+X7	1	Reads with adapters:	86231999 
+X7	1	Reads written (passing filters):	132922151 
+X7	2	Total reads processed:	132922151
+X7	2	Reads with adapters:	85968710 
+X7	2	Reads written (passing filters):	132922151 
+X8	1	Total reads processed:	178056711
+X8	1	Reads with adapters:	120656435 
+X8	1	Reads written (passing filters):	178056711 
+X8	2	Total reads processed:	178056711
+X8	2	Reads with adapters:	121409900 
+X8	2	Reads written (passing filters):	178056711 
