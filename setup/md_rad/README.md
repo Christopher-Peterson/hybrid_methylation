@@ -3,7 +3,8 @@
 
 # md-RAD Data setup
 
-This section documents acquiring the md-RAD reads, trimming them, and …?
+This section documents acquiring the md-RAD reads, trimming them, and
+aligning them.
 
 ## Acquire the data files
 
@@ -24,12 +25,11 @@ cp $remote_dir/SL-*md?_S*fastq.gz . &
 
 ## Prep and trim the reads for Adults
 
-Next, unzip and concatenate the paired files. To begin with, we’ll just
-do the adults
+Next, unzip and concatenate the paired files. We’re just focusing on
+adults for this one.
 
 ``` bash
 idev
-# idev-skx
 for f in *gz; do pigz -d $f &
 done
 
@@ -46,6 +46,7 @@ function concat_paired_reads {
 
 for fl in raw_data/*L001_R1_001.fastq; do concat_paired_reads $fl & 
 done
+# stay in idev
 ```
 
 Run the preliminary filtering script on each concatenated read set
@@ -55,7 +56,8 @@ Run the preliminary filtering script on each concatenated read set
 mkdir -p scripts slurm jobs logs
 chmod +x scripts/*
 mkdir -p filt0 pe_filt0
-idev
+
+# idev # if out
 
 FILT0_LOG=logs/filt0.o
 
@@ -87,12 +89,12 @@ done
 #for file in raw_data/*S43*L001*fastq; do  run_filter0_pe $file; done; cat $FILT0_LOG
 
 
-# exit
+exit # exit idev
 # Now run the proper adapter trimming
 sbatch slurm/md_cutadapt
 ```
 
-## Align reads?
+## Align reads
 
 First, setup & Bowtie index the genome
 
@@ -101,16 +103,12 @@ First, setup & Bowtie index the genome
 mkdir genome
 cd genome
 
-# If it already exists on Scratch
-# ln -sf ../../../genomes/Amil_v2.1/GCF_013753865.1_Amil_v2.1_genomic.fna Amil.fasta
-
-# if Not:
-# cp $STOCKYARD/tagmap-share/genomes/Amil_v2.1/GCF_013753865.1_Amil_v2.1_genomic.fna Amil.fasta
+ln -sf ../../../genomes/Amil_v2.1/GCF_013753865.1_Amil_v2.1_genomic.fna Amil.fasta
 
 # Run the bowtie2-build indexer
 idev
 bowtie2-build -f --threads 20 Amil.fasta Amil
-exit
+exit # exit idev
 cd ..
 ```
 
@@ -122,5 +120,3 @@ sbatch slurm/md_align.slurm
 # post-process it
 sbatch slurm/md_align_post.slurm
 ```
-
-Mapping for these is only about 30% unique (not ideal).
