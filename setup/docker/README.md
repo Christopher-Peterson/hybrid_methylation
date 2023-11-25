@@ -5,7 +5,7 @@ This project uses Docker (and Singularity, the TACC-equivalent version)
 for installation and version control of bioniformatics packages. When
 installed correctly, these are invisible to the end-user.
 
-## Installation
+## Installation on TACC
 
 1.  Setup your directories with `mkdir -p $WORK/singularity/bin`.
 2.  Copy `docker/singularity_mask.sh` to `$WORK/singularity`.
@@ -15,7 +15,6 @@ installed correctly, these are invisible to the end-user.
 
 ``` bash
 cds hybrid_methylation/docker
-
 mkdir logs
 sbatch slurm/setup_singularity.slurm
 ```
@@ -23,11 +22,18 @@ sbatch slurm/setup_singularity.slurm
 This will install the singularity modules and configure them so that
 they can be used as regular bash commands.
 
-## Setting up the brms/stan docker image
+## Setup brms/stan docker image on TACC
 
-The GAM components (the temporary ones, at least) use an image
-Christopher originally created for a different project; it’s being set
-up here for both local and TACC use.
+The cmdstan binaries will need to be compiled on TACC.
+
+``` bash
+sbatch slurm/build_cmdstan.sh
+```
+
+## Optional: Setting up the brms/stan docker image locally
+
+The Bayesian models use a docker image with brms and stan
+(edge-trait-meta) that initially created for a different project.
 
 ``` bash
 TAG=crpeters/edge-trait-meta:4.2.0 
@@ -60,7 +66,10 @@ from the web would be a security vulnerability. In this case, replace
 `-e DISABLE_AUTH=true` with `-e PASSWORD=...` (where the dots are your
 password).
 
-### Using the brms Docker Image
+You’ll need to install cmdstan in a mounted location once you’ve
+launched docker.
+
+### Using the brms Docker Image locally
 
 In the console, run `sudo docker container start edge_trait_meta` (you
 can skip this if you just initialized the container). Then, open a web
@@ -70,10 +79,10 @@ number to whatever \$PORT is if you adjust it).
 When you’re done, run `sudo docker container stop edge_trait_meta` to
 shut it down.
 
-### If there are errors
+## If there are errors
 
-There seems to be an issue with Docker-Hub where some of my newer
-repositories not wanting to download on Singularity. This appears to be
-some sort of privacy/authorization problem. Logging into my account
-fixes it. If someone wants to download these images and gets any errors,
-contact Christopher and he’ll give you a read-only access code.
+There are occasional issues with downloading these docker images on
+singularity. This appears to be some sort of privacy/authorization
+problem. If someone wants to download these images and gets any errors,
+contact me (Christopher) I’ll help figure it out. You can also build the
+images yourself on a local system from the provided dockerfiles.
