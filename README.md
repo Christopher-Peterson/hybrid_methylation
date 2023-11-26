@@ -1,17 +1,19 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# The Hybrid Methylation Project
+# Analysis for “Mixed patterns of intergenerational DNA methylation inheritance in *Acropora*
 
-(At some point, I’ll put a real introduction here)
+*Christopher R. Peterson, Carly B. Scott, Rashin Ghaffari, Groves B.
+Dixon, and Mikhail V. Matz*
 
 ## Setup
 
-This project uses Lonestar6 on TACC; I will be assuming you have access
-to the system.
+This project used Lonestar6 at the Texas Advanced Computing Center. Code
+has been written specifically for this system, although it should work
+on other HPC clusters with some modification.
 
-1.  From `$SCRATCH`, clone this repository. You may need to setup a
-    Github Personal Access Token to do that on TACC.
+1.  From `$SCRATCH`, clone this repository (or download the zip/tarball
+    and extract it)
 
 ``` bash
 cds
@@ -20,18 +22,24 @@ git clone https://github.com/Christopher-Peterson/hybrid_methylation.git
 
 2.  Setup and configure the [Docker/Singularity images](setup/docker/).
 
-3.  Setup [Integrative Genomics Viewer (IVG)](setup/igv) and associated
-    tools for use on TACC.
+Data from several stages of this pipeline are available: (details)
 
 Contributors to this repository should also follow [these
 instructions](setup/dev).
 
-## Whole Genome Bisulfide Sequence Data
+## Allele-Specific Methylation Analysis Pipeline
 
-1.  [Get the Data, trim the reads, and prepare the reference
+1.  [Get the WBGS data, trim the reads, and prepare the reference
     genome](setup/wgbs_setup/).
 
-2.  [Align the trimmed reads and extract the methylation
-    information](alignment_experiments/).
+2.  [Align the trimmed parental reads and extract the methylation
+    counts](alignment_experiments/).
 
-3.  (I am working on this part)
+3.  [Prepare and align mdRAD data](setup/md_rad/).
+
+4.  [Variant call the parents to identify fixed SNP differences;
+    generate masked genomes for allele-specific alignment; align
+    offspring](snps/).
+
+5.  [Estimate differential methylation between alleles; run Bayesian
+    models to estimate inheritance](dss/).

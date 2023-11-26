@@ -38,7 +38,7 @@ if [ "$TYPE" == "pe" ]; then
     FILE_2=${FILE_1/_1.trim/}_2.trim
     # Using a temp directory in scratch
     TEMP_DIR=temp/${FILE_1}_wd
-    BAM=bams/${FILE_1}_bismark_bt2_pe.bam
+    BAM=bams/${FILE_1}_bismark_bt2_pe.bamd
     FILES="$FILE_1 $FILE_2"
     add_job_if_no_bam
   }

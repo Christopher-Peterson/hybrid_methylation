@@ -29,15 +29,13 @@ cd raw_data
 cp  /corral-repl/utexas/tagmap/dixon_backups/file_sharing_test_dir/JA20120.tar.gz .
 
 # Untar
-tar –xvzf JA20120.tar.gz &
+tar –xzf JA20120.tar.gz 
 
 cd JA20120_download
 
 # There should be 12 directories in here
 ls | wc -l # 13
 rm *json # Remove an unneeded json file
-
-# move these things...
 
 ```
 
@@ -56,7 +54,7 @@ When that's done, check that the counts are correct.
 
 ```{bash, eval = FALSE, echo = TRUE}
 # Expected numbers in comments:
-ls *.fastq | wc -l	# 24
+ls raw_data/fastqs/*.fastq | wc -l	# 24
 ls lane1*.fastq | wc -l # 12
 ls lane2*.fastq | wc -l # 12
 ls *_R1_*.fastq | wc -l # 12
@@ -70,90 +68,49 @@ cds hybrid_methylation
 mkdir reads
 cd reads
 ln -s ../setup/wgbs_setup/raw_data/fastqs raw
+
+cds hybrid_methylation/setup/wgbs_setup
 ```
 
 ## Trim the reads
 
-### Test trimming on a data subset
+### Trimming with Trim Galore
 
-First, we're going to create a subset of the fastqs to test the trimming on:
+We're using Trim Galore.
 
-```{bash, eval = FALSE, echo = TRUE}
-NTEST=1000000 # Size of test in lines
-cds hybrid_methylation/setup/wgbs_setup
-
-mkdir -p trim_test/fastqs
-# Copy the first part of each file
-cd raw_data/fastqs
-for file in *.fastq
-do head -n $NTEST $file > ../../trim_test/fastqs/${file}
-done
-
-cd ../.. # wgbs_setup
-```
-
-Next, trim the test files.
-
-```{bash, eval = FALSE, echo = TRUE}
-sbatch slurm/trim_pe_test.slurm
-# This should take < 5 minutes on ls6
-```
-
-Once that's done, run the fastqc on both sets of test data.
-
-```{bash, eval = FALSE, echo = TRUE}
-mkdir trim_test/fastqc_results
-sbatch slurm/fastqc_test.slurm
-```
-
-
-### Trim the whole reads
-
-The full fastq's should take around 20-30 minutes to trim.
-
-```{bash, eval = FALSE, echo = TRUE}
-sbatch slurm/trim_pe_full.slurm
-
-# Check results
-ls $SCRATCH/hybrid_methylation/reads/trimmed | wc -l # 24
-```
-
-They should end up in the `reads/trimmed` directory
-
-### Alternate trimming with Trim Galore
-
-I'm trying an alternate trimming method (Trim Galore) in an attempt to improve alignment quality.
 ```{bash, eval = FALSE, echo = TRUE}
 sbatch slurm/trim_galore_pe_full.slurm
 
-# This produces trim files with the wrong name; adjust them to have the same names as the previous trim files
-<!-- ( ADD to the slurm) -->
-<!-- for fq in raw_data/trimmed/*fq; do -->
+# This produces trim files with the wrong name; adjust them to have the same names as the non trim-galore method previously tried 
+# Need to go from lane1-A1-A_S1_L001_R1_001_val_1.fq  
+  # to lane1-A1-A_S1_L001_1.trim
+
 function rename_file {
   local a=$1
-  local b=${a/_val/}
-  local c=${b/.fq/}
+  local b=${a/_R1_00._val/}
+  local c=${b/.fq/.trim}
   mv $a $c
 }
+for fq in raw_data/trimmed/*fq; do
+  rename_file $fq ; done
 
-for fq in reads/trimmed/*2.trim; 
-  do mv $fq ${fq/_001_2.trim/.trim}; done
-  # Too lazy to remember normal double variable substitution/modificaiton, so here's a bootleg version
-done
 ```
 
 ## Prepare the Reference Genome
 
+This acquires the Amil v. 2.1 reference genome and its GFF (may need to be altered to target an external source), runs the bismark genome script on it, and generates feature windows.
 Most of the work for this is done by the slurm script. First, the script files need to have their permissions enabled.
 
 ```{bash, eval = FALSE, echo = TRUE}
 chmod +x scripts/*py
-sbatch slurm/setup_reference_genome_amilsel.sh # This one ends in .sh because it's more of a regular script that just happens to work best on slurm
+sbatch slurm/setup_reference_genome_amil.sh # This one ends in .sh because it's more of a regular script that just happens to work best on slurm
 ```
 
 This will create a `genomes.sh` script in the main hybrid_methylation directory that can be sourced by other scripts.
 
 ### Create a Bismarkified version of Chromosome 1 for test mapping
+
+*Not required for replication.*
 
 For testing purposes, we will also create a version of the reference genome that's only for chromosome 1. First, we need to split the genome into individual chromosomes. Version 2.1 of the *A. mil* genome has 14 chromosomes and 840 unplaced elements. We will only focus on the chromosomes.
 

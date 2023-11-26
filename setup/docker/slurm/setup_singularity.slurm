@@ -23,19 +23,12 @@ singularity pull -F docker://biopython/biopython:latest &
 singularity pull -F docker://crpeters/r-tidyverse-optparse:4.2.1 &
 singularity pull -F docker://crpeters/r-plotting:4.2.1 &
 singularity pull -F docker://biocontainers/pysam:v0.15.2ds-2-deb-py3_cv1 &
-# singularity pull -F docker://crpeters/snpsplit:0.5.0 &
 singularity pull  --name nfcore-methylseq-1.6.1.img docker://nfcore/methylseq:1.6.1 &
-#singularity pull -F docker://biocontainers/bamtools:v2.5.1dfsg-3-deb_cv1 &
 singularity pull -F docker://crpeters/angsd:0.940-stable &
 singularity pull -F docker://staphb/bcftools:1.16 &
-singularity pull -F docker://crpeters/batmeth2:latest &
-singularity pull -F docker://crpeters/methhaplo:latest &
 singularity pull -F docker://crpeters/edge-trait-meta:4.2.0 &
 
-singularity pull -F docker://crpeters/inform_me_jl:latest &
 singularity pull -F docker://crpeters/r-methylkit:4.2.1 &
-
-singularity pull -F docker://crpeters/whatshap:1.7 &
 
 
 # Create the binary wrappers for each of them
@@ -63,7 +56,7 @@ singularity_mask biopython $WORK/singularity/biopython_latest.sif python3
 singularity_mask r-tidy-opt $WORK/singularity/r-tidyverse-optparse_4.2.1.sif Rscript
 singularity_mask r-plotting $WORK/singularity/r-plotting_4.2.1.sif Rscript
 
-# singularity_mask r-methylkit $WORK/singularity/r-methylkit_4.2.1.sif Rscript
+singularity_mask r-methylkit $WORK/singularity/r-methylkit_4.2.1.sif Rscript
 singularity_mask r-brms $WORK/singularity/edge-trait-meta_4.2.0.sif Rscript
 # singularity_mask pysam $WORK/singularity/pysam_v0.15.2ds-2-deb-py3_cv1.sif python3
 

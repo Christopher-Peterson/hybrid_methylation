@@ -21,18 +21,13 @@ cd snps/scripts
 # Download the masking script
 wget https://raw.githubusercontent.com/bio15anu/revelio/main/revelio.py
 
-# Download a helper script for freebayes
-#wget https://raw.githubusercontent.com/freebayes/freebayes/master/scripts/coverage_to_regions.py
-# Freebayes parallel script
-#wget https://raw.githubusercontent.com/freebayes/freebayes/master/scripts/freebayes-parallel
 cd ..
 ```
 
 Setup the folder for the alignment.
 
 ``` bash
-#ALIGNMENT=pe_xrelaxed
-ALIGNMENT=pe_xr2
+ALIGNMENT=pe_xrelaxed
 mkdir $ALIGNMENT
 cd $ALIGNMENT
 mkdir jobs split_genomes temp vcf logs masked_bams masked_genomes offspring offspring/bams offspring/reports offspring/snpsplit offspring/snps
@@ -67,7 +62,7 @@ parents had fixed, opposite genotypes and genotype probabilities were \>
 0.95.
 
 ``` bash
-sbatch -d afterok:597990 slurm/revelio_run.slurm # Creates masked bam files
+sbatch slurm/revelio_run.slurm # Creates masked bam files`
 
 # These masked Bams need to be indexed
 # FOr whatever reason, the revelio script didn't do the indexing
@@ -75,27 +70,46 @@ for bam in masked_bams/*bam; do
 samtools index $bam &
 done
 
+# Once this is done, run this sequence of slurm scripts
+function sbatch_job {
+  local job=`sbatch "${@}" | grep "Submitted batch job" | grep -Po "[0-9]+$" `
+  echo $job
+}
 
 # Run the VCF script
-sbatch -d  slurm/angsd_vcf_run.slurm
+j0=`sbatch_job -d  slurm/angsd_vcf_run.slurm`
 # Merge the results
-sbatch -d afterok:618959 slurm/angsd_vcf_merge.slurm
+j1=`sbatch_job -d afterok:$j0 slurm/angsd_vcf_merge.slurm`
 # Filter the VCFs to only include snps w/ fixed, opposite genotypes & two samples
-sbatch -d afterok:618960 slurm/vcf_filter.slurm
+j2=`sbatch_job -d afterok:$j1 slurm/vcf_filter.slurm`
 ```
 
-## Create masked genomes & run alignments
-
-Now, we use a modified version of the SNPsplit genome preparation script
-to create masked versions of the genome, convert them for use with
-Bismark, and setup a helper script for further analysis
+# Combining mdRAD and WGBS data to improve SNP discrimination
 
 ``` bash
-sbatch -d afterok:618960 slurm/mask_genomes.slurm
+cds hybrid_methylation/snps
+
+mkdir -p with_md with_md/jobs with_md/logs
+cd with_md
+ALIGNMENT=pe_xrelaxed
+# Link appropriate files & directories
+ln -sf ../$ALIGNMENT/masked_bams wgbs_masked_bams
+ln -sf ../../setup/md*/bams md_bams
+ln -sf ../slurm slurm
+ln -sf ../scripts scripts
+ln -Lsf ../$ALIGNMENT/genome.sh genome.sh
+ln -sf ../../$ALIGNMENT/vcf/concat vcf/wgbs
 ```
 
-Now, let’s quickly establish the parents of each cross, then run the
-alignments on the masked parental genomes.
+Note, the naming conventions between the WGBS and mdRAD data are
+different; here’s the adult conversion:
+
+- A1 = selago4
+- A2 = selago6
+- A3 = milepora8
+- A4 = milepora11
+
+And here’s the association between parents and offspring:
 
 ``` bash
 # Offspring, Parent Combo
@@ -108,156 +122,10 @@ X7    A23
 X8    A24   
 X2    A12   
 X4    A34" > parents.txt
-sbatch -d afterok:618963 slurm/align_masked.slurm
-
-# THen deduplicate & sort the new bams
-sbatch -d afterok:618965 slurm/dedup_sort_offspring.slurm
 ```
 
-Once this is done, we’ll use SNPsplit on the resulting bam files to
-separate out allele-specific alignments.
-
-I’m having trouble figuring out which SNP file to use; for now, I’m
-using the one that’s `all_*SNPs*.txt`, but if it doesn’t work, I’ll
-combine the two. The main difference between them is that the second
-genome has alt/ref reversed.
-
-    ## stat: cannot stat 'offspring/snpsplit/X*tsv': No such file or directory
-    ## ID   SNPs    reference
-
-<!-- # Alternate pathway: MethHaplo -->
-<!-- We're trying an alternate Allele-Specific-methylation pipeline here -->
-<!-- Run the previous pipeline.  Then, index the genomes (reference and masked) with BatMeth2. -->
-<!-- ```{bash, eval = FALSE, echo = TRUE} -->
-<!-- sbatch slurm/index_masked_genomes.slurm -->
-<!-- sbatch slurm/index_ref.slurm -->
-<!-- ``` -->
-<!-- Next, use BatMeth2's methylation calling routine; this also creates modified SAM files. -->
-<!-- Finally, run MethHaplo to get ASM for each offspring; this requires the filtered VCF file of the parents, the SAM and Methylation calls from calmeth, and the masked indexed genome. -->
-<!-- ```{bash, eval = FALSE, echo = TRUE} -->
-<!-- # Helper function, to sbatch a file & return its job -->
-<!-- function sbatch_job { -->
-<!--   local job=`sbatch "${@}" | grep "Submitted batch job" | grep -Po "[0-9]+$" ` -->
-<!--   echo $job -->
-<!-- } -->
-<!-- # Sort and deduplicate the offspring sam files -->
-<!-- SORT_JOB=`sbatch_job slurm/dedup_sort_offspring.slurm` -->
-<!-- # Then run methylation calls -->
-<!-- CALMETH_JOB=`sbatch_job -d afterok:${SORT_JOB} slurm/calmeth.slurm` -->
-<!-- # CALMETH_JOB=`sbatch_job slurm/calmeth.slurm` -->
-<!-- # Then call methhaplo -->
-<!-- sbatch -d afterok:${CALMETH_JOB} slurm/meth_haplo.slurm -->
-<!-- ``` -->
-<!-- Also, run methhalpo for the parents.  First, we'll need to get individual-specific vcf files for them as well. -->
-<!-- ```{bash, eval = FALSE, echo = TRUE} -->
-<!-- # Make vcf's  -->
-<!-- VCF_JOB=`sbatch_job slurm/angsd_vcf_parent_run.slurm` -->
-<!-- # Concat VCF's -->
-<!-- CONCAT_JOB=`sbatch_job -d afterok:${VCF_JOB} slurm/angsd_vcf_parent_merge.slurm` -->
-<!-- # Filter for confident 1 -->
-<!-- FILTER_JOB=`sbatch_job -d afterok:${CONCAT_JOB} slurm/vcf_filter_parent.slurm` -->
-<!-- # Run the methhaplo -->
-<!-- sbatch -d afterok:${FILTER_JOB} slurm/meth_haplo_parents.slurm -->
-<!-- ``` -->
-<!-- Looks like this has created useful output files... -->
-<!-- Thoughts about the output: -->
-<!-- Plus & minus are just the watson & crick strands. They probably SHOULD be merged. -->
-<!-- lools like the columns in question are MM, MU, UM, and UU.  Two other columns after (the last of which I think is a p-value test for ASM?) -->
-<!-- What's next? -->
-<!-- Let's try downloading and importing these into R. -->
-<!-- First, zip up some of the resulting files -->
-<!-- ```{bash, eval = FALSE, echo = TRUE} -->
-<!-- cd meth_haplo -->
-<!-- mkdir offspring -->
-<!-- mv mh_X* offspring -->
-<!-- tar offspring -->
-<!-- alias tar-pz="tar --use-compress-program='pigz -k ' -cf" -->
-<!-- tar-pz offspring.tar.gz offspring -->
-<!-- tar-pz parents.tar.gz parents -->
-<!-- cd offspring -->
-<!-- tar-pz offspring_bams_masked_sorted.tar.gz sorted_bams -->
-<!-- ``` -->
-<!-- # Differential Methylation Analysis -->
-<!-- Let's try this from BatMeth2 -->
-<!-- ```{bash, eval = FALSE, echo = TRUE} -->
-<!-- mkdir -p diff_meth -->
-<!-- function run_dmr { -->
-<!--   local P1=${1:=1} -->
-<!--   local P2=${1:=3} -->
-<!--   local PARS=A${P1}${P2} -->
-<!--   batDMR -g ref_genome/Amil_lambda.fa \ -->
-<!--          -o_dm diff_meth/${PARS}_dm \ -->
-<!--          -o_dmr diff_meth/${PARS}_dmr \ -->
-<!--          -1 calmeth/A${P1}.methratio.txt \ -->
-<!--          -2 calmeth/A${P2}.methratio.txt \ -->
-<!--          -context ALL  -->
-<!-- } -->
-<!-- run_dmr 1 2 & -->
-<!-- run_dmr 1 4 & -->
-<!-- run_dmr 2 3 & -->
-<!-- run_dmr 2 4 & -->
-<!-- run_dmr 3 4 & -->
-<!-- ``` -->
-<!-- For a better DMR, consider logistic splines?s -->
-<!-- ( I've tried the splines, they also don't work well. ) -->
-
-# Combining mdRAD and WGBS data to improve SNP discrimination
-
-This part assumes you’ve gone as far as making the masked bam files in
-the earlier section. We’ll be starting with those, adding in the md-rad
-bams, and then repeating the SNPsplit pipeline.
-
-``` bash
-cds hybrid_methylation/snps
-#with_md=with_md
-with_md=tg_md
-
-mkdir -p $with_md $with_md/jobs $with_md/logs
-cd $with_md
-#ALIGNMENT=pe_xrelaxed
-ALIGNMENT=pe_xr2
-# Link appropriate files & directories
-ln -sf ../$ALIGNMENT/masked_bams wgbs_masked_bams
-ln -sf ../../setup/md*/bams md_bams
-ln -sf ../slurm slurm
-ln -sf ../scripts scripts
-ln -Lsf ../$ALIGNMENT/genome.sh genome.sh
-ln -sf ../$ALIGNMENT/parents.txt parents.txt
-ln -sf ../../$ALIGNMENT/vcf/concat vcf/wgbs
-```
-
-Next, the naming conventions between the WGBS and mdRAD data are
-different; here’s the adult conversion:
-
-- A1 = selago4
-- A2 = selago6
-- A3 = milepora8
-- A4 = milepora11
-
-This will merge the four into new masked bam files. (Update: we aren’t
-donig this)
-
-``` bash
-#mkdir masked_bams # This is where the resulting combined bams will go
-#idev
-#function merge_bams {
-#  local wgbs_code=$1
-#  local md_code=$2
-#  local out_file=masked_bams/${wgbs_code}_masked.bam
-#  #in_wgbs=wgbs_masked_bams/${wgbs_code}_masked.bam
-#  local in_mds=`ls md_bams/A-${md_code}-md*bam`
-#  samtools merge -f -@32  $out_file $in_mds
-#  samtools index $out_file
-#}
-#merge_bams A1 s4 &
-#merge_bams A2 s6 &
-#merge_bams A3 m8 &
-#merge_bams A4 m11 &
-#
-#exit
-```
-
-Now re-run the vcf scripts & re-mask the genomes
+Now, we’re going to call SNPs for the mdRAD data and merge the SNP data
+into the WGBS VCF.
 
 ``` bash
 # Offspring, Parent Combo
@@ -269,149 +137,57 @@ ORIG_PARMS=`cat  ../$ALIGNMENT/config/bismark.parms`
 mkdir -p config
 echo "$ORIG_PARMS -np 0" > config/bismark.parms
 
-function sbatch_job {
-  local job=`sbatch "${@}" | grep "Submitted batch job" | grep -Po "[0-9]+$" `
-  echo $job
-}
 # Run the VCF script on the mdRAD data
 
 # combine the paired MD bam files
-j0=`sbatch_job slurm/concat_parent_mds.slurm`
-j1=`sbatch_job -d afterok:${j0} slurm/angsd_vcf_md.slurm`
+j3=`sbatch_job -d afterok:${j2} slurm/concat_parent_mds.slurm`
+j4=`sbatch_job -d afterok:${j3} slurm/angsd_vcf_md.slurm`
 # Merge the results
-j2=`sbatch_job -d afterok:${j1} slurm/angsd_vcf_merge.slurm`
+j5=`sbatch_job -d afterok:${j4} slurm/angsd_vcf_merge.slurm`
 
-# Filter and join the WGBS & mdRAD data
-j3=`sbatch_job -d afterok:${j2} slurm/vcf_filter_join_mask.slurm`
+# Filter and join the WGBS & mdRAD data + mask the parental genomes
+j6=`sbatch_job -d afterok:${j5} slurm/vcf_filter_join_mask.slurm`
+```
 
+Now that parental genomes are masked, we perform allele-specific
+alignment with the offspring WGBS reads.
+
+``` bash
 # run new alignments 
-j4=`sbatch_job -d afterok:${j3}  slurm/align_masked.slurm`
+j7=`sbatch_job -d afterok:${j6}  slurm/align_masked.slurm`
 #j4=`sbatch_job slurm/align_masked.slurm`
 
 # Dedup, sort, index alignments
-j5=`sbatch_job -d afterok:${j4}  slurm/dedup_sort_offspring.slurm`
+j8=`sbatch_job -d afterok:${j7}  slurm/dedup_sort_offspring.slurm`
 
 # Now run the snpsplit script
-j6=`sbatch_job -d afterok:${j5}  slurm/snpsplit_trial.slurm`
+j9=`sbatch_job -d afterok:${j8}  slurm/snpsplit_trial.slurm`
 
 # Methylation extract
-j7=`sbatch_job -d afterok:${j6}  slurm/methyl_extract.slurm`
+j10=`sbatch_job -d afterok:${j9}  slurm/methyl_extract.slurm`
 ```
 
-Initial analysis of the SNPsplit results suggests that the original
-allele-specific read percentage has roughly doubled due to the use of
-the mdRAD SNP information and the new alignment options.
+## Setup for differential methylation analysis
 
-<!-- # The Cpel-ASM pipeline (This isn't being used) -->
-<!-- I'm going to attempt to use [CpelASM.jl](https://github.com/jordiabante/CpelAsm.jl) for haplotype ASM analysis using information theory.   -->
-<!-- This requires SNPsplit to have already been run. -->
-<!-- First, let's make the vcf.  We can base it off of the merged VCF from the mdRAD/WGBS data.  The goal will be to A) filter out sites w/ no variants (e.g., all 1/1 sites), B) construct phased haplotypes, and C) fill in the rest of the information based on the sample file. -->
-<!-- ```{bash, eval = FALSE} -->
-<!-- cds hyb*/snps/w* -->
-<!-- mkdir -p cpel/vcf cpel/out -->
-<!-- # Setup the vcf files -->
-<!-- idev -->
-<!-- function run_cpel_vcf { -->
-<!--   id=$1 -->
-<!--   parent=`grep $id parents.txt | grep -oP "A??"` -->
-<!--   r-tidy-opt scripts/format_cpel_vcf.r $id $parent -->
-<!-- } -->
-<!-- for i in {1..8}; do  -->
-<!--  run_cpel_vcf X$i &  -->
-<!-- done -->
-<!-- wait -->
-<!-- exit -->
-<!-- ``` -->
-<!-- Looks like the masked genome needs to be completely assembled too (not just the Bisulfite version). This will create a concatenated masked genome (`hybrid_N-masked.fa`) inside each parent's subfolder. -->
-<!-- ```{bash, eval = FALSE} -->
-<!-- source genome.sh -->
-<!-- CHR_ORDER=( `cat $GENOME_FOLDER/chrLengths.txt | grep -Po "^.+\t" ` ) -->
-<!-- function concat_masked_genome { -->
-<!--   local dir=${1} -->
-<!--   local GENOME_FILES="" -->
-<!--   for chr in ${CHR_ORDER[@]}; do  -->
-<!--     local GENOME_FILES="$GENOME_FILES ${dir}/*hybrid*masked/${chr}.N-masked.fa" -->
-<!--   done -->
-<!--   #echo "Genome files: $GENOME_FILES" -->
-<!--   cat $GENOME_FILES > ${dir}/hybrid_N-masked.fa -->
-<!-- } -->
-<!-- for dir in masked_genomes/A??; do -->
-<!--   concat_masked_genome $dir -->
-<!-- done -->
-<!-- # Index masked genomes -->
-<!-- sbatch slurm/index_masked_genomes.slurm -->
-<!-- # ALso do a traditional index -->
-<!-- for fa in masked_genomes/indexed/*fa; do -->
-<!-- samtools faidx $fa & -->
-<!-- done -->
-<!-- # Also index snpsplit bams -->
-<!-- idev -->
-<!-- module unload xalt -->
-<!-- cd offspring/snpsplit -->
-<!-- mkdir sorted -->
-<!-- N_CORES=16 -->
-<!-- for bam in X?.{genome?,unassigned}.bam; do -->
-<!-- out_bam="sorted/$bam" -->
-<!-- samtools sort -o $out_bam -@$N_CORES $bam -->
-<!-- samtools index $out_bam -->
-<!-- done -->
-<!-- exit -->
-<!-- #function sort_unassiged { -->
-<!-- #  bam=$1 -->
-<!-- #  out_bam="sorted/$bam" -->
-<!-- #  samtools sort -o $out_bam -@$N_CORES $bam -->
-<!-- #  samtools index $out_bam -->
-<!-- #} -->
-<!-- #for bam in X{2,3,4,5,6,7,8}.unassigned.bam; do -->
-<!-- #  sort_unassiged $bam & -->
-<!-- ##done -->
-<!-- ``` -->
-<!-- Now, set up the julia package;  -->
-<!-- ```{bash} -->
-<!-- ``` -->
-<!-- Currently getting this error: -->
-<!-- "Found overlap between homozygous and heterozygous CpG sites. Check FASTA file is masked." -->
-<!-- This is definitely the N-masked fasta, right? Yes, it is -->
-<!-- Could this be because it's a pool-seq dataset?  Yeah, that's probably it. -->
-<!-- Could I N-mask the asm datasets for polymorphisms?   -->
-<!-- Could have the two genome bams in the opposite order as the VCF.  Easy to check. Update: This isn't it. -->
-<!-- Todo tomorrow:  -->
-<!-- 1. Complete the MD-rad analysis (follow Grove's script) -->
-<!--   - The windows have been made, IIRC -->
-<!-- 2. Do the original version of the asm analysis (filter out zero quality reads first, though) -->
-<!--   - Filter bams to remove Qmap0 -->
-<!--   - bismark methyl extractor -->
-<!--   - Use the snps/test/allele_specific_methyl.r script -->
-<!-- 3. Look into a VCF masking option for individual offspring pseudo haplotypes? -->
-<!-- 4. Differential Methylation analysis? -->
-<!-- UPDATE: This hasn't been working; drop -->
+Finally, we want to identify how the order of reference/alternate genome
+matches to dam/sire; this won’t be consistent between individual
+offspring because we used the same reference genome for each pair of
+pure crosses.
 
-# DSS Pipeline
-
-This is based off of the Bioconductor package DSS, which uses smoothing
-windows & shrinkage to estimate beta-binomial dispersion parameters for
-differential methylation estimates
-
-First, set everything up
+    ## stat: cannot stat 'offspring/snpsplit/X*tsv': No such file or directory
 
 ``` bash
-cds hyb*/snps/tg_md
-ln -s ../../dss dss
-cd dss
-mkdir -p logs jobs
-
-# create an ordered_parents file; offspring, genome1, genome2
-ordered_parents="offspring_parents.tsv" && >$ordered_parents
-parents=( zero $(readlink ../offspring/snpsplit/*tsv | grep -oP "A._SNPs_A.") )  # zero is to make it one-indexed
-for i in {1..8}; do  echo -e X$i"\t"${parents[i]/"_SNPs_"/"\t"} >> $ordered_parents; done
+# Link to the parents cov.gz files
+mkdir -p offspring/snpsplit/methyl_extract/parents
+for i in {1..4}; do
+ln -sLf $SCRATCH/hybrid_methylation/alignment_experiments/pe_xrelaxed/methyl_extract/lane1-A${i}*.cov.gz offspring/snpsplit/methyl_extract/parents/A${i}.cov.gz
+done
 ```
-
-The rest of this is in the DSS folder
 
 # Pipeline counts
 
 ``` bash
-cds hyb*/snps/tg_md
+cds hyb*/snps/with_md
 pc_bam=pipeline_counts_offspring_bam.tsv
 pc_dedup=pipeline_counts_offspring_dedup.tsv
 pc_snpsplit=pipeline_counts_offspring_snpsplit.tsv

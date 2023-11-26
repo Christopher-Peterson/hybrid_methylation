@@ -14,7 +14,7 @@ suppressPackageStartupMessages({
 })
 ```
 
-# WGBS Alignment Experiments
+# WGBS Alignment
 
 This script assumes that you have You have cloned the git repository,
 [configured Singularity](../setup/docker/), set up [IGV](../setup/igv),
@@ -158,24 +158,25 @@ vis_tapestry pe_local
 vis_tapestry pe_yrelaxed
 ```
 
-
-# ToDo:
-
-  - Lambda Spike?
-
-## Run full alignment (have been using pe_xrelaxed, but may need to switch)
+## Run full alignment
 
 Run the alignment on all of samples with `pe_xrelaxed`:
 
 ```{bash, eval = FALSE, echo = TRUE}
+# If you're starting here, uncomment and run these lines to create pe_xrelaxed
+# source alignment_experiments/functions.sh
+# new_alignment_experiment pe_xrelaxed "pe" "-N 1 --score_min L,0,-0.8"
+
+
 # First, modify the run slurm file to have 5 hours, just to be safe
 # Then, run the full alignment
-run_alignment run pe_xr2
-dedup_alignment pe_xr2
+run_alignment run pe_xrelaxed
+dedup_alignment pe_xrelaxed
 ```
 
-We'll be moving to the `pe_xr2`
+We'll be moving to the `pe_xrelaxed`
 directory and staying there until otherwise noted.
+
 ### Extract Methylation Calls
 
 I tested the methylation extraction script on a single de-duplicated BAM
@@ -183,19 +184,20 @@ file (`lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.bam`), then
 verify that the output is present.
 
 ```{bash, eval = FALSE, echo = TRUE}
+cd pe_xrelaxed
 # Run extraction trial
 sbatch slurm/bismark_extract_trial.slurm
 # Wait until complete
 du -h methyl_extract/*lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated*
 # Results:
-25G     methyl_extract/CpG_context_lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.txt
-152M    methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.bedGraph.gz
-159M    methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.bismark.cov.gz
-957M    methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.CpG_report.txt
-2.0K    methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.cytosine_context_summary.txt
-27K     methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.M-bias.txt
-1.0K    methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated_splitting_report.txt
-109G    methyl_extract/Non_CpG_context_lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.txt
+# 25G     methyl_extract/CpG_context_lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.txt
+# 152M    methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.bedGraph.gz
+# 159M    methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.bismark.cov.gz
+# 957M    methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.CpG_report.txt
+# 2.0K    methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.cytosine_context_summary.txt
+# 27K     methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.M-bias.txt
+# 1.0K    methyl_extract/lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated_splitting_report.txt
+# 109G    methyl_extract/Non_CpG_context_lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.txt
 
 # This is more or less what's expected, so run the rest
 
@@ -203,6 +205,8 @@ sbatch slurm/bismark_extract_run.slurm
 ```
 
 ### Compress & Backup to `WORK`
+
+You can skip the rest of this document if you're replicating the study.
 
 This has generated a lot of files, so it's worth backing up the
 important ones to `WORK` in case `SCRATCH` is purged.
@@ -232,7 +236,7 @@ cp -r methyl_extract/*{.gz,_summary.txt,M-bias.txt,_splitting_report.txt} $WRK/m
 We want to get read counts for each step of this process
 
 ```{bash, eval = FALSE, ECHO + TRUE}
-cds hyb*/align*/pe_xr2
+cds hyb*/align*/pe_xrelaxed
 
 # Output Files
 pc_trim=pipeline_counts_trim.tsv
