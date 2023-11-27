@@ -33,10 +33,10 @@ function new_alignment_experiment {
   local RUN_NAME="align_run_$NAME"
   local TRIAL_NAME="align_trial_$NAME"
   if [ $TYPE == "pe" ]; then 
-    local RUN_NODES="11"
+    local RUN_NODES="4"
     local RUN_TIME='05:00:00' # Must be in single quotes to avoid escapes
   else
-    local RUN_NODES="12"
+    local RUN_NODES="4"
     local RUN_TIME='07:00:00' # Must be in single quotes to avoid escapes
   fi  
   sed -e "s/sed_TIME/$RUN_TIME/g" \

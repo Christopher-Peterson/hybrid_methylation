@@ -11,6 +11,9 @@ cds hybrid_methylation
 chmod +x alignment_experiments/scripts/*
 ```
 
+If you’re replicating this, you can now skip straight to the [full
+alignment](#full-alignment).
+
 ## Determining Alignment Parameters
 
 Aligning the WGBS sequencing data will be challenging, and there are a
@@ -156,7 +159,8 @@ Run the alignment on all of samples with `pe_xrelaxed`:
 # new_alignment_experiment pe_xrelaxed "pe" "-N 1 --score_min L,0,-0.8"
 
 
-# First, modify the run slurm file to have 5 hours, just to be safe
+# First, these runs are configured with 5 hours as a default
+# You may need to modify the slurm file in pe_xrelaxed/slurm if it doesn't work on your system
 # Then, run the full alignment
 run_alignment run pe_xrelaxed
 dedup_alignment pe_xrelaxed
