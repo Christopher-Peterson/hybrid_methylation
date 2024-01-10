@@ -22,7 +22,7 @@ arrow_text = \(between = c('parent', 'offspring', 'maternal', 'paternal')) {
   ) 
   
   geom_seg = do.call(geom_segment, set_names(seg_lst, seg_nms))
-  sub = switch(between, parent = 'p', offspring = 'o', maternal = '♀', paternal = '♂')
+  sub = switch(between, parent = 'p', offspring = 'o', maternal = 'f', paternal = 'm')
   text_just = if_else(between == 'maternal', 1, 0)# switch(between, maternal = 0, )
   txt_args = list(
     fixed = between,

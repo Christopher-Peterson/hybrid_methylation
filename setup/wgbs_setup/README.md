@@ -79,12 +79,24 @@ sbatch slurm/trim_galore_pe_full.slurm
 
 function rename_file {
   local a=$1
-  local b=${a/_R1_00._val/}
+  local b=${a/_R?_001_val/}
   local c=${b/.fq/.trim}
   mv $a $c
 }
 for fq in raw_data/trimmed/*fq; do
-  rename_file $fq ; done
+    rename_file $fq ; done
+```
+
+Finally, we want to create a link to the trimmed files in the main
+directory
+
+``` bash
+trim_dir=$PWD/raw_data/trimmed
+link_dir=$SCRATCH/hybrid_methylation/reads/trimmed
+mkdir -p $link_dir
+for fq in $trim_dir/lane*trim; do
+  ln -s $fq $link_dir/$(basename $fq)
+done
 ```
 
 ## Prepare the Reference Genome

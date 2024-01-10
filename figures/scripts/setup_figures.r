@@ -36,7 +36,7 @@ if(!exists('FIGURES_SETUP')) {
     theta = '{data_dir}/mixture_model_uncorrelated_nogene_theta_quantiles_{delta}_N{N}.csv'
   ) |> map(glue)
   
-  consist_smry_file = '{data_dir}/consist_model_smry.rds' |> glue()
+  consist_smry_file = '{data_dir}/consist_model_autocor_smry_og.rds' |> glue()
   # Should we do GBM /non-gbm model fits as well?
   
   
@@ -45,14 +45,18 @@ if(!exists('FIGURES_SETUP')) {
     cross_diagram = 'cross_design.png',
     delta_guide = 'delta_guide.png',
     expected_results = 'expected_results.png',
+    eta_diagram= 'eta_def_joint.png', 
     mixture_model = 'mixture_all.png',
+    # mixture_model_pdf = 'mixture_all.pdf',
+
     mixture_model_gbm = 'mixture_gbm.png',
     mixture_model_nogene = 'mixture_nogene.png',
     consistency_1d = 'consist.png',
     consistency_recip = 'recip_arrow.png',
     consistency_recip_noarrow = 'recip_noarrow.png',
     inter_gen_v2 = 'parent_offspring.png',
-    mixture_model_table = 'table_1.rds'
+    mixture_model_table = 'table_1.rds',
+    consistency_parameters = 'gbm_nogene_sds.png'
   ) |> map(\(x) file.path(fig_dir, x))
   
   ## Common elements ####
@@ -83,6 +87,7 @@ if(!exists('FIGURES_SETUP')) {
       maternal = "Intergenerational change in<br>methylation (<sub></sub>Δ<sub>♀</sub>)",
       paternal = "Intergenerational change in<br>methylation (<sub></sub>Δ<sub>♂</sub>)"
     ), 
+    eta = 'Heritability Index (η)',
     diff_delta_wrap = "Intergenerational differential<br>methylation change (<sub></sub>Δ<sub>o</sub> - Δ<sub>p</sub>)",
     delta_p_wrap = "Differential methylation<br>between parents (<sub></sub>Δ<sub>p</sub>)",
     delta_o_wrap = "Differential methylation<br>between offspring alleles (<sub></sub>Δ<sub>o</sub>)"

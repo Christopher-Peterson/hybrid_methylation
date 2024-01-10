@@ -33,8 +33,8 @@ function add_job {
   # echo $BAI_FILE
 #  if [ ! -s $BAI_FILE ]; then # If it doesn't exist/is empty, add the job
     # Append the job for file to the job script
-#   echo "$SCRIPT $FILE"   >> $LAUNCHER_JOB_FILE
-  fi
+  echo "$SCRIPT $FILE"   >> $LAUNCHER_JOB_FILE
+  # fi
 }
 
 

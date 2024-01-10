@@ -6,7 +6,9 @@ source('dss/scripts/standardize_data.r')
 
 # Add GBM information
 gbm_loci = read_tsv(gbm_file) |> select(`#chrom`, start) |> distinct() |> mutate(gbm = TRUE)
-gbm_base_data = base_data |> left_join(gbm_loci) |> mutate(gbm = !is.na(gbm))
+gbm_base_data = base_data |> left_join(gbm_loci) |> 
+  mutate(gbm = !is.na(gbm)) |> 
+  mutate(diff_delta = diff_delta * sign(delta_p))
 
 
 # Filtering based on GBM doesn't change anything
@@ -15,8 +17,8 @@ base_mp_plot = gbm_base_data |># filter(gbm) |>
   pivot_wider(names_from = role, values_from = delta_po) |> 
   ggplot(aes(x = maternal, y = paternal)) +#, color = delta_p)) +# abs(delta_o))) + 
   coord_fixed() + 
-  scale_x_continuous('Maternal-specific intergenerational<br>methylation change (<sub></sub>Δ<sub>♀</sub>)', limits = c(-1,1)) + 
-  scale_y_continuous('Paternal-specific intergenerational<br>methylation change (<sub></sub>Δ<sub>♂</sub>)', limits = c(-1,1)) + 
+  scale_x_continuous('Maternal-specific intergenerational<br>methylation change (<sub></sub>Δ<sub>f</sub>)', limits = c(-1,1)) + 
+  scale_y_continuous('Paternal-specific intergenerational<br>methylation change (<sub></sub>Δ<sub>m</sub>)', limits = c(-1,1)) + 
   theme(legend.position = c(1,1),#c(.5,.95), 
         legend.justification = c(1,.4),
         legend.direction = 'horizontal', legend.background = element_blank())
@@ -37,9 +39,7 @@ mp_p_plot = base_mp_plot +
   ggtitle('B') +
   geom_point(aes(color = delta_p)) #+ theme(legend.text())
 mp_diff_plot = base_mp_plot +   
-  scale_color_viridis_c(expression(
-    plain('Sign')*(Delta[p])*(Delta[o]-Delta[p])
-  ), option = 'rocket')+
+  scale_color_viridis_c(expression(eta), option = 'rocket', direction = -1)+
   ggtitle('D') +
   geom_point(aes(color = diff_delta))
 ggsave(out_files$inter_gen_v2, 

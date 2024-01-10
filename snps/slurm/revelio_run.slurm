@@ -2,8 +2,8 @@
 
 #-------------------------------------------------------
 #SBATCH -J revelio_run  # sed_* will be replaced w/ sed on creation of experiment
-#SBATCH -N 3
-#SBATCH -n 3
+#SBATCH -N 4
+#SBATCH -n 4
 #SBATCH -p normal
 #SBATCH -o logs/revelio_run.o
 #SBATCH -e logs/revelio_run.e

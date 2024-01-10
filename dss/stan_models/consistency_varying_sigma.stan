@@ -46,8 +46,8 @@ parameters {
   vector[N_deltap] Yl_deltap;  // latent variable
   real Intercept_deltap;  // temporary intercept for centered predictors
   real<lower=0> sigma_deltap;  // dispersion parameter
-  vector<lower=0>[M_1] sd_1;  // group-level standard deviations
-  vector[N_1] z_1[M_1];  // standardized group-level effects
+  vector<lower=0>[2] sd_1;  // group-level standard deviations (1 = nogene, 2 = gene)
+  vector[N_1] z_1[1];  // standardized group-level effects
   simplex[N_nogene] sigma_sdeltao_locus_nogene_props; // proportions of total variation for each group.
   simplex[N_gene] sigma_sdeltao_locus_gene_props; // proportions of total variation for each group.
   
@@ -59,7 +59,7 @@ transformed parameters {
   real lprior = 0;  // prior contributions to the log posterior
   vector[N_1] sigma_sdeltao_locus = sigma_sdeltao[locus_assignment]; #.* sqrt(N_1 * sigma_sdeltao_locus_props);
   bsp_sdeltao = rep_vector(1, rows(bsp_sdeltao));
-  r_1_sdeltao_1 = (sd_1[1] * (z_1[1])); // mean per-locus effect
+  r_1_sdeltao_1 = (sd_1[locus_assignment] .* (z_1[1])); // mean per-locus effect
   
   // Assemble sigma_sdeltao_locus
   sigma_sdeltao_locus[which_nogene] = sigma_sdeltao_locus[which_nogene] .*
@@ -109,11 +109,12 @@ generated quantities {
   real b_deltap_Intercept = Intercept_deltap;
   real diff_sigma_sdeltao = sigma_sdeltao[2] - sigma_sdeltao[1]; 
   // Diff_delta calculations
-  vector[N] diff_delta = Yl_sdeltao - Intercept_sdeltao - (bsp_sdeltao[1] * Yl_deltap .* Csp_sdeltao_1);
+  vector[N] diff_delta = Yl_sdeltao - (bsp_sdeltao[1] * Yl_deltap .* Csp_sdeltao_1);
   vector[N] true_resid = diff_delta -  r_1_sdeltao_1[J_1_sdeltao] ;
+  vector[N_1] locus_mean = Intercept_sdeltao + r_1_sdeltao_1;
   // Will need to do some post-processing to calculate the residual variance per locus
-  real sd_diff_delta = sd(diff_delta);
-  real sd_resid = sqrt(sd_diff_delta^2 - sd_1[1]^2);
+  // real sd_diff_delta = sd(diff_delta);
+  // real sd_resid = sqrt(sd_diff_delta^2 - sd_1[1]^2);
   
   
 

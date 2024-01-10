@@ -17,13 +17,15 @@ suppressPackageStartupMessages(library(flextable))
 
 # Tables
 
-**Table 1:** Slope and mixing portions of the heritable component of the mixture model for each cross, presented for all loci, coding loci, and non-coding loci.  Heritable proportions and regression slopes are presented with 95% credible intervals. 
+**Table 1:** Slope and mixing portions of the heritable component of the mixture model for each cross, presented for all loci, gene body methylation, and non-coding regions.  Heritable proportions and regression slopes are presented with 95% credible intervals. 
 
 ```{r, echo = FALSE, include = TRUE, eval = TRUE}
-table_1 = read_rds(out_files$mixture_model_table)
+table_1 = read_rds(out_files$mixture_model_table) |> 
+  mutate(Loci = recode(Loci, Coding = 'Gene Body', 'Non-coding' = 'Intergenic')) |> 
+  rename(Region = Loci) 
 
 table_1_fmt = table_1 |> 
-  arrange(Cross, Loci) |> 
+  arrange(Cross, Region) |> 
   # Create these to re-do subscript formatting in flextable style, they won't be included in the actual table
   mutate(Cross2 = Cross |> str_remove_all('\\<.?sub\\>') |> str_remove_all(' ') ) |>
   separate(Cross2, into = c('sp1', 'n1', 'x', 'sp2', 'n2'), sep = 1:4) |> 
@@ -34,7 +36,7 @@ table_1_fmt = table_1 |>
     set_table_properties(layout = 'fixed') |> 
     valign(j = 'Cross', valign = 'top') |> 
     width(j = 'Cross', width = 2, unit = 'cm') |> 
-    width(j =  'Loci', width = 3, unit = 'cm') |> 
+    width(j =  'Region', width = 3, unit = 'cm') |> 
     width(j = c('Heritable Proportion', 'Regression Slope'), width = 6, unit = 'cm') 
 table_1_fmt
 ```
@@ -56,30 +58,27 @@ Point color indicates local density, to counteract overplotting.
 
 ```{r, echo = FALSE, out.width = '100%', fig.retina = 2}
 wd = getwd()
-knitr::include_graphics(file.path(wd, out_files$consistency_1d), dpi = 280,rel_path = FALSE)
-```
-
-
-**Figure 2:** Consistency of per-locus heritability between crosses.
-Each panel shows the heritability index $(\eta = \text{Sign}(\Delta_p)(\Delta_o - \Delta_p))$ of each locus that was detected in more than one cross (N = 494 loci), ordered by position in the genome and separated by chromosomes (boxed numbers).
-Gene Body loci are shown in the top panel, other loci in bottom panel.
-When $\eta$ is near zero, methylation is heritable, with negative values corresponding to decreasing differential methylation in the offspring.
-The expected value of $\eta$ at each locus is shown by the black line, surrounded by the 90% credible interval in gray. Non-heritable loci are marked with a red tick below the chromosome number.
-The gray lines at the top of each panel show the variability between crosses at each locus; non-gene loci were on average more variable (less consistent) between crosses.
-
-  
-
-```{r, echo = FALSE, out.width = '100%', fig.retina = 2}
-wd = getwd()
 knitr::include_graphics(file.path(wd, out_files$consistency_recip_noarrow), dpi = 280,rel_path = FALSE)
 ```
 
-**Figure 3:** Consistency of differential methylation in reciprocal crosses.
+**Figure 2:** Consistency of differential methylation in reciprocal crosses.
 Each panel shows differentially methylated loci detected in both *A. selago* (left) or *A. millepora* (right) reciprocal cross. 
 Offspring differential methylation $(\Delta_o)$ for each reciprocal cross is shown by the points.
 Parental differential methylation is on the negative diagonal (shown by the two colored segments).
 The color of each point matches the parental differential methylation at that locus along the negative diagonal. 
 Distance from the negative diagonal indicates an inconsistent change in differential methylation between the crosses.
+
+```{r, echo = FALSE, out.width = '100%', fig.retina = 2}
+wd = getwd()
+knitr::include_graphics(file.path(wd, out_files$consistency_1d), dpi = 280,rel_path = FALSE)
+```
+
+**Figure 3:** Consistency of per-locus heritability between crosses.
+Each panel shows the heritability deviation index $(\eta = \text{Sign}(\Delta_p)(\Delta_o - \Delta_p))$ of each locus that was detected in more than one cross (N = 494 loci), ordered by position in the genome and separated by chromosomes (boxed numbers).
+Gene Body loci are shown in the top panel, other loci in bottom panel.
+When $\eta$ is near zero, methylation is heritable, with negative values corresponding to decreasing differential methylation in the offspring.
+The expected value of $\eta$ at each locus is shown by the black line, surrounded by the 90% credible interval in gray. Non-heritable loci are marked with a red tick below the chromosome number.
+The gray lines at the top of each panel show the variability between crosses at each locus; non-gene loci were on average more variable (less consistent) between crosses.
 
 
 # Supplemental Figures
@@ -97,7 +96,7 @@ wd = getwd()
 knitr::include_graphics(file.path(wd, out_files$delta_guide), dpi = 280,rel_path = FALSE)
 ```
 
-**Figure S2**: Guide to differential methylation measures. Each cross involves four genomes (one for each parent and two allele-specific alignments for the offspring pool). There are four primary differential methylation measures I use, plus one or two composites: $\Delta_p$ and $\Delta_o$ are Dam - Sire, so negative values indicate loci with high sire-specific methylation; $\Delta_♀$ and $\Delta_♂$ are Offspring - Parent, so negative value indicate loci where methylation decreased in offspring. The heritability index $\eta = \text{Sign}(\Delta_p)(\Delta_o - \Delta_p)$ measures the deviation from perfect heritability while correcting for the dam/sire effect on the direction. Negative values indicate reduced differential methylation in offspring when compared to their parents. 
+**Figure S2**: Guide to differential methylation measures. Each cross involves four genomes (one for each parent and two allele-specific alignments for the offspring pool). There are four primary differential methylation measures I use, plus one or two composites: $\Delta_p$ and $\Delta_o$ are Dam - Sire, so negative values indicate loci with high sire-specific methylation; $\Delta_♀$ and $\Delta_♂$ are Offspring - Parent, so negative value indicate loci where methylation decreased in offspring. 
 
 ```{r, echo = FALSE, out.width = '100%', fig.retina = 2}
 wd = getwd()
@@ -106,27 +105,35 @@ knitr::include_graphics(file.path(wd, out_files$expected_results), dpi = 280,rel
 
 **Figure S3**: Expected patterns for heritable and non-heritiable methylation.  If methylation is heritable, loci that are differentially methylated between the two parents should have similar differential methylation between the paternal and maternal offspring alleles. If methylation is not inherited, then offspring differential methylation should disappear between generations.  
 
+
 ```{r, echo = FALSE, out.width = '120%', fig.retina = 2}
 wd = getwd()
 knitr::include_graphics(file.path(wd, out_files$mixture_model_gbm), dpi = 280,rel_path = FALSE)
 ```
 
-**Figure S4**: Mixture model run on only gene body loci; see Figure 1 for more details.
+**Figure S4**: Mixture model, gene body methyaltion only; see Figure 1 for more details.
 
 ```{r, echo = FALSE, out.width = '120%', fig.retina = 2}
 wd = getwd()
 knitr::include_graphics(file.path(wd, out_files$mixture_model_nogene), dpi = 280,rel_path = FALSE)
 ```
 
-**Figure S5**: Mixture model, non-gene body loci; see Figure 1 for more details.
+**Figure S5**: Mixture model, intergenic loci only; see Figure 1 for more details.
 
+
+```{r, echo = FALSE, out.width = '120%', fig.retina = 2}
+wd = getwd()
+knitr::include_graphics(file.path(wd, out_files$eta_diagram), dpi = 280,rel_path = FALSE)
+```
+
+**Figure S6**: Explanation of heritability deviation index $\eta = \text{Sign}(\Delta_p)(\Delta_o - \Delta_p)$ with simulated data. A) Loci are considered heritable when $\Delta_o = $\Deltap (the diagonal line); the distance from the diagonal between them (the red and blue lines), the less heritable.  B) The difference between $\Delta_o$ and $\Delta_p$ is difficult to interpret, since its sign is dependent on whether methylation increased or decreased in the maternal or paternal allele.  C) Standardizing by the sign of $\Delta_p$ controls for the direction of parental change, so that negative values of $\eta$ correspond to reduced differential offspring methylation, while increases correspond to greater differential offspring methylation.
 
 ```{r, echo = FALSE, out.width = '120%', fig.retina = 2}
 wd = getwd()
 knitr::include_graphics(file.path(wd, out_files$inter_gen_v2), dpi = 280,rel_path = FALSE)
 ```
 
-**Figure S6**: Integenerational Allele-specific changes for maternal $(\Delta_♀)$ and paternal $(\Delta_♂)$ lineages; positive values correspond to methylation gains in offspring, and values near zero indicate intergenerational similarity. There is no apparent bias towards gain or loss in either lineage.  **A** Bivariate density of dam- and sire-specific methylation changes across loci. **B** Differential methylation in parental generation. When methylation was higher in sire-specific alleles (blue points), sire-specific methylation decreased or dam-specific methylation increased, and the converse is true when methylation is higher in dam-specific alleles (red points) **C** Magnitude of differential methylation in offspring. Methylation changes between parents and offspring are generally associated with decreased differential methylation between offspring alleles. **D** Intergenerational change in differential methylation.  Methylation changes between parents and offspring are generally associated with decreased methylation heritability (brighter colors).
+**Figure S7**: Integenerational Allele-specific changes for maternal $(\Delta_♀)$ and paternal $(\Delta_♂)$ lineages; positive values correspond to methylation gains in offspring, and values near zero indicate intergenerational similarity. There is no apparent bias towards gain or loss in either lineage.  **A** Bivariate density of dam- and sire-specific methylation changes across loci. **B** Differential methylation in parental generation. When methylation was higher in sire-specific alleles (blue points), sire-specific methylation decreased or dam-specific methylation increased, and the converse is true when methylation is higher in dam-specific alleles (red points) **C** Magnitude of differential methylation in offspring. Methylation changes between parents and offspring are generally associated with decreased differential methylation between offspring alleles. **D** Intergenerational change in differential methylation.  Methylation changes between parents and offspring are generally associated with decreased methylation heritability (brighter colors).
 
 
 <!-- # Crossing design -->

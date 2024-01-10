@@ -11,7 +11,6 @@ min_count = argv[1] |> as.integer() %|% 5L
 max_count = argv[2] |> as.integer() %|% 400L
 parent_role_data =  argv[3] %|% (Sys.getenv('SCRATCH') |> file.path('hybrid_methylation/metadata/dam_sire.csv'))
 genome_order_data = argv[4] %|% 'offspring_parents.tsv'
-# dss_order_data =    argv[5] %|% 'dss_delta_order.tsv'
 
 ### Determine Sample Metadata ####
 
@@ -29,13 +28,6 @@ genome_order = read_tsv(genome_order_data, show_col_types = FALSE,
   pivot_longer(g1:g2, names_to = 'genome', names_prefix = 'g', values_to = 'parent') |> 
   mutate(offspring_asm = glue("{offspring}.{genome}"))
 
-# dss_order = read_tsv(dss_order_data, show_col_types = FALSE,
-#                      col_names = c('first', 'second')) |> 
-#   mutate(correct = glue('{first}_{second}'), 
-#          flip = glue("{second}_{first}")) |> 
-#   select(correct, flip) |> 
-  # pivot_longer(everything(), names_to = 'order', values_to = 'concat')
-
 # Combine ordering info
 
 sample_metadata = genome_order |> 
@@ -43,10 +35,7 @@ sample_metadata = genome_order |>
   select(-genome) |> 
   pivot_longer(c(parent, offspring_asm), names_to = 'generation', values_to = 'id') |> 
   pivot_wider(names_from = role, values_from = id) |> 
-  mutate(concat = glue("{maternal}_{paternal}"))# |> 
-# This isn't needed for the independent version
-  # left_join(dss_order, by = 'concat') |> 
-  # mutate(sign = recode(order, correct = 1L, flip = -1L)) # Flip isn't necesary
+  mutate(concat = glue("{maternal}_{paternal}"))
 
 crossing_data = sample_metadata |> select(offspring:paternal) |> 
   mutate(generation = substr(generation, 1,1)) |> 
@@ -75,8 +64,7 @@ read_bsseq_cov = \(file) {
     dplyr::select(chr, pos, N, X = N_meth)
 }
 
-
-# These two functions make 
+# 
 get_intersecting_data = \(cross_name, mat_p, pat_p, mat_o, pat_o, min_reads = min_count, max_reads = max_count) {
   p1 = read_bsseq_cov(adult_list[mat_p])
   o1 = read_bsseq_cov(offspring_list[mat_o])

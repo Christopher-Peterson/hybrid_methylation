@@ -20,6 +20,10 @@ mkdir snps snps/scripts snps/slurm
 cd snps/scripts
 # Download the masking script
 wget https://raw.githubusercontent.com/bio15anu/revelio/main/revelio.py
+# get Snpsplit
+wget https://raw.githubusercontent.com/FelixKrueger/SNPsplit/master/SNPsplit
+wget https://raw.githubusercontent.com/FelixKrueger/SNPsplit/master/tag2sort
+chmod +x SNPsplit bismark2 tag2sort
 
 cd ..
 ```
@@ -31,19 +35,23 @@ ALIGNMENT=pe_xrelaxed
 mkdir $ALIGNMENT
 cd $ALIGNMENT
 mkdir jobs split_genomes temp vcf logs masked_bams masked_genomes offspring offspring/bams offspring/reports offspring/snpsplit offspring/snps
+
+# Link to aligned bams
+ln -s $SCRATCH/hybrid_methylation/alignment_experiments/$ALIGNMENT/bams/sorted bams
+
+# Link the slurm & script folders
+ln -s ../slurm slurm
+ln -s ../scripts scripts
+
 chmod +x scripts/SNPsplit_genome_preparation
 chmod +x scripts/*.sh
 # Link the sorted bams
 ln -sf $SCRATCH/hybrid_methylation/alignment_experiments/$ALIGNMENT/bams/sorted bams
 # Copy the genome link
-ln -sfL $STOCKYARD/hybrid_methylation/alignment_experiments/$ALIGNMENT/genome.sh genome.sh
+ln -sfL $SCRATCH/hybrid_methylation/alignment_experiments/$ALIGNMENT/genome.sh genome.sh
+#$STOCKYARD/hybrid_methylation/alignment_experiments/$ALIGNMENT/genome.sh genome.sh
 # Link the config from alignment
 ln -sf $SCRATCH/hybrid_methylation/alignment_experiments/$ALIGNMENT/config config
-
-
-# Link the slurm & script folders
-ln -s ../slurm slurm
-ln -s ../scripts scripts
 ```
 
 ## Generate VCF files for parents
@@ -62,10 +70,11 @@ parents had fixed, opposite genotypes and genotype probabilities were \>
 0.95.
 
 ``` bash
-sbatch slurm/revelio_run.slurm # Creates masked bam files`
+sbatch -d afterok:1366301 slurm/revelio_run.slurm # Creates masked bam files`
 
 # These masked Bams need to be indexed
 # FOr whatever reason, the revelio script didn't do the indexing
+
 for bam in masked_bams/*bam; do
 samtools index $bam &
 done
@@ -77,7 +86,7 @@ function sbatch_job {
 }
 
 # Run the VCF script
-j0=`sbatch_job -d  slurm/angsd_vcf_run.slurm`
+j0=`sbatch_job slurm/angsd_vcf_run.slurm`
 # Merge the results
 j1=`sbatch_job -d afterok:$j0 slurm/angsd_vcf_merge.slurm`
 # Filter the VCFs to only include snps w/ fixed, opposite genotypes & two samples
@@ -89,7 +98,7 @@ j2=`sbatch_job -d afterok:$j1 slurm/vcf_filter.slurm`
 ``` bash
 cds hybrid_methylation/snps
 
-mkdir -p with_md with_md/jobs with_md/logs
+mkdir -p with_md with_md/jobs with_md/logs with_md/vcf
 cd with_md
 ALIGNMENT=pe_xrelaxed
 # Link appropriate files & directories
@@ -139,20 +148,23 @@ echo "$ORIG_PARMS -np 0" > config/bismark.parms
 
 # Run the VCF script on the mdRAD data
 
+
 # combine the paired MD bam files
-j3=`sbatch_job -d afterok:${j2} slurm/concat_parent_mds.slurm`
+j3=`sbatch_job  slurm/concat_parent_mds.slurm`
 j4=`sbatch_job -d afterok:${j3} slurm/angsd_vcf_md.slurm`
 # Merge the results
 j5=`sbatch_job -d afterok:${j4} slurm/angsd_vcf_merge.slurm`
 
 # Filter and join the WGBS & mdRAD data + mask the parental genomes
-j6=`sbatch_job -d afterok:${j5} slurm/vcf_filter_join_mask.slurm`
+j6=`sbatch_job -d afterok:${j5},${j2} slurm/vcf_filter_join_mask.slurm`
 ```
 
 Now that parental genomes are masked, we perform allele-specific
 alignment with the offspring WGBS reads.
 
 ``` bash
+# Make sure the bismark2 script is executable
+
 # run new alignments 
 j7=`sbatch_job -d afterok:${j6}  slurm/align_masked.slurm`
 #j4=`sbatch_job slurm/align_masked.slurm`
@@ -168,6 +180,8 @@ j10=`sbatch_job -d afterok:${j9}  slurm/methyl_extract.slurm`
 ```
 
 ## Setup for differential methylation analysis
+
+(After pipeline finishes, start here)
 
 Finally, we want to identify how the order of reference/alternate genome
 matches to dam/sire; this won’t be consistent between individual
@@ -229,4 +243,26 @@ echo -e "#ID\tcolumn\tcount" > $snp_df
 grep -P "SNPs stored in total:" offspring/snpsplit/*report.txt | \
 sed -e 's|offspring/snpsplit/||' \
 -e 's|.SNP.\+total:|\tSNPs\t| # Trim excess text & replace with "SNPS" column' >> $snp_df
+```
+
+# Prepare backup for upload to NCBI
+
+``` bash
+# Copy all of the fastqs, all of the bams, and all of the extracted methylations
+bak_dir=$SCRATCH/hybrid_methylation/bak_stage
+
+mkdir -p $bak_dir/adult_bams_md
+cp md_bams/A* $bak_dir/adult_bams_md &
+
+cd pe_xrelaxed
+mkdir -p $bak_dir/adult_bams
+cp bams/* $bak_dir/adult_bams &
+
+cds hyb*/align*/pe_xrelaxed
+mkdir -p $bak_dir/adult_methyl
+cp methyl_extract/*cov.gz $bak_dir/adult_methyl
+
+
+
+# Now do the same for the offspring
 ```

@@ -20,14 +20,14 @@ module unload xalt
 # Setup the job file
 
 RSCRIPT=r-methylkit
-# # Maternal/Paternal information
-# parental_roles=$SCRATCH/hybrid_methylation/metadata/dam_sire.csv
-# # Which allele-specific genomes are attached to which parents
-# genome_order=offspring_parents.tsv
-# # Determine which order dss put everything in
-# samples_delta_order=dss_delta_order.tsv
+# Maternal/Paternal information; in the repo
+parental_roles=$SCRATCH/hybrid_methylation/metadata/dam_sire.csv
+# Which allele-specific genomes are attached to which parents
+genome_order=offspring_parents.tsv
 
-# $RSCRIPT scripts/dss_independent_setup.r # "$parental_roles" "$genome_order" "$samples_delta_order"
+# Setup runs
+$RSCRIPT scripts/dss_independent_setup.r "$parental_roles" "$genome_order"
+
 > $LAUNCHER_JOB_FILE
 for i in {1..8}; do
   echo "$RSCRIPT scripts/dss_independent_run.r X${i}" >> $LAUNCHER_JOB_FILE
@@ -35,7 +35,3 @@ done
 
 export LAUNCHER_WORKDIR=$PWD
 $LAUNCHER_DIR/paramrun
-# # 540906
-# sbatch --dependency=afterok:540918 slurm/calmeth.slurm
-
-$RSCRIPT scripts/dss_independent_merge_data.r

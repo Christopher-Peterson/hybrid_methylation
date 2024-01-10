@@ -45,12 +45,32 @@ read_theta_regline = \(files, point_data = no_po_point_data) {
 }
 
 # This plot is created from several nested sets of panels
-
+.global_include_reg = TRUE
 #' Create the point + regline plot for a single cross
-cross_layer_plot = \(data) {
+cross_layer_plot = \(data, include_reg = .global_include_reg, .noaxis = TRUE) {
+  extra_elements = list()
+  if(isTRUE(include_reg)) {
+    extra_elements = c(extra_elements, list(
+      geom_line(aes(y = med, group = dpar), data = data$regline) ,
+        geom_line(aes(y = lo, group = dpar), linetype = 2, data = data$regline), 
+        geom_line(aes(y = hi, group = dpar), linetype = 2, data = data$regline) 
+    ))
+  }
+  if(isTRUE(.noaxis)) {
+    extra_elements = c(extra_elements, list(
+      theme(axis.title = element_blank()),
+      labs(x = NULL, y = NULL)
+      ))
+  } else {
+    extra_elements = c(extra_elements, list(
+      labs(x = labels$delta_p, y = labels$delta_o)
+    ))
+  }
   data$points |> ggplot(aes(delta_p, delta_o)) +
     fixed_lines[c('h', 'diag')] + 
     facet_wrap(~offspring_herit, nrow = 2) +
+    # Adjust ofspring herit to remove the proportions if necessary
+    # OR don't 
     geom_pointdensity() +
     theme_classic() +
     theme(strip.background = element_blank(), 
@@ -60,23 +80,20 @@ cross_layer_plot = \(data) {
           legend.title = element_text(size = 10), 
           axis.title.x = element_markdown(),
           axis.title.y = element_markdown(),
-          axis.title = element_blank(),
           # legend.direction = 'horizontal',
           # legend.box = 'horizontal',
           legend.position = c(0.5, 0),
           legend.just = c(0.5, 0)  ) +
     coord_fixed() + 
     xlim(-1, 1) + ylim(-1, 1) + 
-    geom_line(aes(y = med, group = dpar), data = data$regline) + 
-    geom_line(aes(y = lo, group = dpar), linetype = 2, data = data$regline) + 
-    geom_line(aes(y = hi, group = dpar), linetype = 2, data = data$regline) +     
+    extra_elements +  
     scale_color_viridis_c('Data Density',
                           guide = guide_colorbar(
                             title.hjust = 0.5,
                             title.position = 'top',
                             direction = 'horizontal',
-                          )) + labs(x = NULL, y = NULL)#+ 
-  #labs(x = labels$delta_p, y = labels$delta_o)
+                          )) #+ 
+  #
 }
 
 #' Create a species-level frame
@@ -174,7 +191,22 @@ fig1_plots = list( all_loci, gbm_loci, nogene_loci ) |>
 map2(out_files[c('mixture_model', 'mixture_model_gbm', 'mixture_model_nogene')], fig1_plots, 
      ggsave, width = 13, height = 8, dpi = 300)
 
+# ggsave(out_files[['mixture_model']], fig1_plots[[1]], 
+#      ggsave, width = 13, height = 8, dpi = 1200)
+
+
+lumped_data = all_loci
+lumped_data$points = lumped_data$points |> mutate(offspring_herit = '')
+
+lumped_plot = cross_layer_plot(lumped_data, include_reg = FALSE, .noaxis = FALSE) 
+ggsave('writing_presentations/fig_1_lumped.png', lumped_plot, width = 6, height = 6, dpi = 300)
 # ggsave(out_files$mixture_model, figure_1, width = 13, height = 8, dpi = 300)
+no_model_data = all_loci
+no_model_data$points = no_model_data$points |> mutate(offspring_herit = str_remove(offspring_herit, ';.+$'))
+.global_include_reg = FALSE
+fig1_all_loci_no_model =  make_mixture_model_figure(no_model_data) ; .global_include_reg = TRUE
+ggsave('writing_presentations/fig_1_no_model.png', fig1_all_loci_no_model,
+       width = 13, height = 8, dpi = 300)
 
 # all_loci$points
 

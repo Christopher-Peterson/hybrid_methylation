@@ -23,18 +23,23 @@ er_data = local({
   bind_rows(herit, no_herit) |> 
     filter(offspring |> between(-1, 1))   
 })
-expected_results_fig = er_data |> 
-  ggplot(aes(x = parent, y = offspring)) + 
-  geom_abline(slope = 1, linetype = 2) + 
-  geom_hline(yintercept = 0, linetype = 1) + 
-  coord_fixed() + 
-  facet_wrap(~herit) + 
-  geom_point(shape = 21, fill = grey(.6)) + 
-  labs(x = labels$delta_p, y = labels$delta_o) + 
-  theme(strip.background = element_blank(),
-        axis.title.x = element_markdown(size = 12), axis.title.y = element_markdown(size = 12),
-        # axis.text = element_text(size = 14),
-        strip.text = element_text(size = 12)
-        )
+make_er_figure = \(data, nrow = 1) {
+  ggplot(data, aes(x = parent, y = offspring)) + 
+    geom_abline(slope = 1, linetype = 2) + 
+    geom_hline(yintercept = 0, linetype = 1) + 
+    coord_fixed() + 
+    facet_wrap(~herit, nrow = nrow) + 
+    geom_point(shape = 21, fill = grey(.6)) + 
+    labs(x = labels$delta_p, y = labels$delta_o) + 
+    theme(strip.background = element_blank(),
+          axis.title.x = element_markdown(size = 12), axis.title.y = element_markdown(size = 12),
+          # axis.text = element_text(size = 14),
+          strip.text = element_text(size = 12)
+    )
+}
+expected_results_fig = er_data |> make_er_figure(1)
+
 ggsave(out_files$expected_results, expected_results_fig, width = 10, height = 5.5, dpi = 300)  
 
+expected_results_fig_v = er_data |> make_er_figure(2)
+ggsave('writing_presentations/expected_v.png', expected_results_fig_v, width = 4, height = 8, dpi = 300)  

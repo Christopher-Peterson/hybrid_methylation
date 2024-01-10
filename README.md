@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Analysis for “Mixed patterns of intergenerational DNA methylation inheritance in *Acropora*
+# Analysis for “Mixed patterns of intergenerational DNA methylation inheritance in *Acropora*”
 
 *Christopher R. Peterson, Carly B. Scott, Rashin Ghaffari, Groves B.
 Dixon, and Mikhail V. Matz*

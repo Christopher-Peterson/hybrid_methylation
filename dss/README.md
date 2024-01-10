@@ -1,117 +1,50 @@
 
-# DSS
+# Differential Methylation Analysis
 
-Describe and document what’s happening here
+## Calculate differnetial methylation
 
-## DSS Runs: Parent vs parent, offspring vs parent, allele-specific parent vs. offspring
+This is based off of the Bioconductor package DSS, which uses smoothing
+windows & shrinkage to estimate beta-binomial dispersion parameters for
+differential methylation estimates.
+
+First, set everything up:
+
+``` bash
+cds hyb*/snps/with_md
+ln -s ../../dss dss
+cd dss
+mkdir -p logs jobs
+cp ../offspring_parents.tsv .
+```
+
+### Run DSS
+
+This script runs per-locus DSS on all loci detected in both alleles:
 
 ``` bash
 cds hyb*/snps/tg_md/dss
-# Run the primary pairwise DSS script, comparing each pair of adults & each pair of offspring alleles.  
-
-# This has been replaced
-
 sbatch slurm/independent_dss.slurm
-
-sbatch slurm/independent_mixture_model.slurm
-
-sbatch slurm/run_consistency_model.slurm
 ```
 
-<!-- ```{bash, eval = FALSE} -->
-<!-- # One rds file per pair per chromosome -->
-<!-- # sbatch slurm/run_dss.slurm -->
-<!-- # Combine each pair into a bed file, then find overlap between parents and offspring pairs -->
-<!-- # sbatch slurm/dss_intersect.slurm -->
-<!-- # Add reads per locus data to the dss intersections -->
-<!-- # sbatch slurm/merge_methyl_counts.slurm -->
-<!-- # Run the allele-specific parent vs. offspring analysis and merge w/ the  -->
-<!-- # main result -->
-<!-- # sbatch slurm/dss_parent_offspring_single.slurm -->
-<!-- # Alternate attempt: -->
-<!-- #sbatch --export ALL,delta=0.25,N=8,N_CORE=16 slurm/dss_parent_offspring_single.slurm -->
-<!-- ## Finally, run the mixture model -->
-<!-- #sbatch --export ALL,delta=0.3,N=8 -d afterok:696683 slurm/run_mixture_model.slurm -->
-<!-- ## Also run the consistency model -->
-<!-- ## And the bivariate model -->
-<!-- # <!-- Non-heritability  -->
-<!-- # Now visualize the figure -->
-<!-- ``` -->
-<!-- Alternate version, where sites are pre-filtered for sample size and forced to be uncorrelated with each other. -->
-<!-- ```{bash, eval = FALSE, echo = TRUE} -->
-<!-- ``` -->
-<!-- ## Asserting directionalty on the DSS data (fold into merge_and_order.slurm) -->
-<!-- For the final version of this analysis, we want $\Delta$ to be Maternal - Paternal.  For some cases, this has been lost; however, the data trail exist to identify which samples need to have their signs flipped. -->
-<!-- Ordering used by dss: -->
-<!-- ```{bash, eval = FALSE} -->
-<!-- # Identify order used by DSS -->
-<!-- ls pairwise_out/dml_test/*chr1.rds | sed -e 's|.*/||g' -e 's|_chr.*||g' -e 's|_|\t|g' > dss_delta_order.tsv -->
-<!-- # Delta is Column 1 - Column 2 -->
-<!-- ``` -->
-<!-- The ordering they should be in:  -->
-<!-- ```{r} -->
-<!-- suppressPackageStartupMessages({library(dplyr); library(tibble); library(tidyr); library(glue)}) -->
-<!-- dam_sire = tribble( -->
-<!-- ~'offspring',  ~'dam', ~'sire', -->
-<!-- 'X1',  'A1',   'A2', -->
-<!-- 'X2',  'A2',   'A1', -->
-<!-- 'X3',  'A3',   'A4', -->
-<!-- 'X4',  'A4',   'A3', -->
-<!-- 'X5',  'A1',   'A3', -->
-<!-- 'X6',  'A1',   'A4', -->
-<!-- 'X7',  'A2',   'A3', -->
-<!-- 'X8',  'A2',   'A4', -->
-<!-- ) |> pivot_longer(dam:sire, names_to = 'role', values_to = 'parent')  -->
-<!-- # Genome association (g1 vs g2) for allele-specific offspring loci -->
-<!-- # This is the data in  dss/offspring_parents.tsv -->
-<!-- allele_specific_genomes = tribble( -->
-<!-- ~'offspring', ~'g2', ~'g1', # Why did I make the order like this? -->
-<!-- "X1",    "A2",      "A1", -->
-<!-- "X2",    "A2",      "A1", -->
-<!-- "X3",    "A4",      "A3", -->
-<!-- "X4",    "A4",      "A3", -->
-<!-- "X5",    "A3",      "A1", -->
-<!-- "X6",    "A4",      "A1", -->
-<!-- "X7",    "A2",      "A3", -->
-<!-- "X8",    "A2",      "A4", -->
-<!-- ) |> pivot_longer(g1:g2, names_to = 'genome', names_prefix = 'g', values_to = 'parent') |>  -->
-<!--   mutate(offspring_asm = glue("{offspring}.{genome}")) -->
-<!-- dss_order = tribble(~'first', ~'second', -->
-<!--   "A1",      "A2", -->
-<!--   "A1",      "A3", -->
-<!--   "A1",      "A4", -->
-<!--   "A2",      "A3", -->
-<!--   "A2",      "A4", -->
-<!--   "A3",      "A4", -->
-<!--   "X1.1",    "X1.2", -->
-<!--   "X2.1",    "X2.2", -->
-<!--   "X3.1",    "X3.2", -->
-<!--   "X4.1",    "X4.2", -->
-<!--   "X5.1",    "X5.2", -->
-<!--   "X6.1",    "X6.2", -->
-<!--   "X7.2",    "X7.1", -->
-<!--   "X8.2",    "X8.1", -->
-<!--   ) |> mutate(correct = glue('{first}_{second}'),  -->
-<!--               flip = glue("{second}_{first}")) |>  -->
-<!--   select(correct, flip) |>  -->
-<!--   pivot_longer(everything(), names_to = 'order', values_to = 'concat') -->
-<!-- result_table = allele_specific_genomes |>  -->
-<!--   left_join(dam_sire, by = c('parent', 'offspring')) |>  -->
-<!--   select(-genome) |>  -->
-<!--   pivot_longer(c(parent, offspring_asm), names_to = 'generation', values_to = 'id') |>  -->
-<!--   pivot_wider(names_from = role, values_from = id) |>  -->
-<!--   mutate(concat = glue("{dam}_{sire}")) |>  -->
-<!--   left_join(dss_order, by = 'concat') -->
-<!-- # So it looks like X2 and X4 need to be flipped (both axes)   -->
-<!-- ``` -->
-<!-- ### Mixture Model Analysis -->
-<!-- ```{bash} -->
-<!-- # Write a slurm file that calls the following -->
-<!-- #R_BRMS=r-edge_trait_meta -->
-<!-- #$R_BRMS mixture_model/dss_mixture_model_cleaned.r -->
-<!-- #$R_BRMS mixture_model/dss_mixture_model_extract.r -->
-<!-- #r-plotting mixture_model/plot_mixture_model.r -->
-<!-- ``` -->
-<!-- ## Parent vs. offspring single analyses -->
-<!-- ```{bash, eval = FALSE} -->
-<!-- ``` -->
+## Bayesian Analyses
+
+These models are described in the publication and supporting information
+
+The mixture model needs to be run first, as it also does setup that is
+important for the other two models:
+
+``` bash
+sbatch slurm/independent_mixture_model.slurm
+```
+
+Run the bivariate model:
+
+``` bash
+sbatch slurm/run_bivar_model.slurm
+```
+
+Run the locus-specific model:
+
+``` bash
+sbatch slurm/run_consistency_model.slurm
+```

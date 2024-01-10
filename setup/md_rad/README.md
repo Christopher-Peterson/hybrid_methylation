@@ -14,8 +14,8 @@ Copy the files from their archive into a raw data folder
 mkdir -p $SCRATCH/hybrid_methylation/setup/md_rad/raw_data
 cds hybrid_methylation/setup/md_rad/raw_data
 
-remote_dir=/work/06909/cbscott/JA21076_download/fastqs
-
+# For replication, this will need to be downloaded instead
+remote_dir=/work/06909/cbscott/JA21076_Hybrid_Methyl/fastqs
 # We only want the md-RAD data that is from Adults (A-*md?_S*fastq.gz) and single larvae (SL_*fastq.gz)
 
 cp $remote_dir/A-*md?_S*fastq.gz . &
@@ -52,6 +52,8 @@ done
 Run the preliminary filtering script on each concatenated read set
 
 ``` bash
+# Still in idev
+
 # Expected numbers in comments:
 mkdir -p scripts slurm jobs logs
 chmod +x scripts/*
@@ -70,17 +72,17 @@ function run_filter0 { # SE version
   mv $OUT_FILE filt0
 }
 # PE version; this one doesn't work
-function run_filter0_pe { 
-  local R1=$1
-  local O1=${R1/raw_data/pe_filt0}
-  local R2=${R1/L001/L002}
-  local O2=${R2/raw_data/pe_filt0}
-  biopython scripts/filter_methylGBS_reads.py -r1 $R1 -r2 $R2 -o1 $O1 -o2 $O2 >> $FILT0_LOG
-}
+#function run_filter0_pe {
+#  local R1=$1
+#  local O1=${R1/raw_data/pe_filt0}
+#  local R2=${R1/L001/L002}
+#  local O2=${R2/raw_data/pe_filt0}
+#  biopython scripts/filter_methylGBS_reads.py -r1 $R1 -r2 $R2 -o1 $O1 -o2 $O2 >> $FILT0_LOG
+#}
 
 > $FILT0_LOG
 #for file in raw_data/*S43*L001*fastq; do # PE version; doesn't work
-for file in concat/S*; do  # SE version
+for file in concat/A*; do  # SE version
   run_filter0 $file &
 #  run_filter0_pe $file &
 done
@@ -91,7 +93,7 @@ done
 
 exit # exit idev
 # Now run the proper adapter trimming
-sbatch slurm/md_cutadapt
+sbatch slurm/md_cutadapt.slurm
 ```
 
 ## Align reads
@@ -115,8 +117,8 @@ cd ..
 Run the alignment & postprocess it.
 
 ``` bash
-sbatch slurm/md_align.slurm
+sbatch -d slurm/md_align.slurm
 
 # post-process it
-sbatch slurm/md_align_post.slurm
+sbatch slurm/md_align_post.slurm # 1355474
 ```

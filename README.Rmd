@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Analysis for "Mixed patterns of intergenerational DNA methylation inheritance in *Acropora*
+# Analysis for "Mixed patterns of intergenerational DNA methylation inheritance in *Acropora*"
 
 *Christopher R. Peterson, Carly B. Scott, Rashin Ghaffari, Groves B. Dixon, and Mikhail V.
 Matz*

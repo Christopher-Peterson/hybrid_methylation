@@ -30,55 +30,36 @@ mix = mixture(gaussian, gaussian, order = FALSE)
 base_prior = # c('mu1', 'mu2')) + 
   set_prior('normal(0, 1)', class = 'Intercept', resp = 'deltao', dpar = c( 'mu2')) + #,
   set_prior('normal(0, 2)', class = 'Intercept', resp = 'deltap') +
-  set_prior('student_t(7, 0, 0.5)', class = 'sigma' , resp = 'deltap' ) + 
-  set_prior('student_t(7, 0, 0.5)', class = 'sigma1' , resp = 'deltao' ) + 
+  set_prior('student_t(7, 0, 2)', class = 'sigma' , resp = 'deltap' ) + 
+  set_prior('student_t(7, 0, 0.5)', class = 'sigma2' , resp = 'deltao' ) + 
+  set_prior('student_t(7, 0, 2)', class = 'sigma1' , resp = 'deltao' ) + 
   set_prior('normal(0, .75)', class = 'meanme', resp = c('deltap', 'deltao')) +
   set_prior('student_t(7, 0, 0.25)', class = 'sdme', resp = c('deltap', 'deltao'), lb = 0) 
 
-### Original version
-if(FALSE) {
-  
-  model_form  = bf(delta_o |  mi(delta.se_o) ~ 1, mu1 ~ (1|offspring), 
-                   mu2 ~ mi(delta_p) * offspring , sigma2 = 'sigma1', 
-                   theta1 ~  offspring, theta2 = 1,
-                   family = mix) + 
-    bf(delta_p | mi(delta.se_p) ~ 1, family = gaussian()) + set_rescor(FALSE)
-  
-  # get_prior(vtheatab_form, all_dat)
-  
-  
-  full_prior = base_prior + 
-    set_prior('normal(0, 1)', #'normal(.75, 0.25)'),
-              class = 'b', resp = 'deltao', dpar = 'mu2') + 
-    set_prior('normal(0,1)', class = 'Intercept', resp = 'deltao', dpar='theta1') +
-    set_prior('student_t(7, 0, 1)', class = 'sd', resp = 'deltao', dpar = 'mu1') +
-    set_prior('normal(0,1)', class = 'b', resp = 'deltao', dpar = 'theta1')
-  # set_prior('student_t(7, 0, .25)', class = 'sd',resp = 'deltao', dpar='theta1')
-  # validate_prior(full_prior, model_form, input_data, mix)
-  
-} else  {
-  
-  model_form  = bf(delta_o |  mi(delta.se_o) ~ 1, 
-                   mu1 ~ 0, 
-                   mu2 ~ mi(delta_p) * offspring , 
-                   sigma2 = 'sigma1', 
-                   theta1 ~  offspring, theta2 = 1,
-                   family = mix) + 
-    bf(delta_p | mi(delta.se_p) ~ 1, family = gaussian()) + set_rescor(FALSE)
-  
-  # get_prior(vtheatab_form, all_dat)
-  
-  
-  full_prior = base_prior + 
+full_prior = base_prior + 
     set_prior('normal(0, 1)', #'normal(.75, 0.25)'),
               class = 'b', resp = 'deltao', dpar = 'mu2') + 
     set_prior('normal(0,1)', class = 'Intercept', resp = 'deltao', dpar='theta1') +
     # set_prior('student_t(7, 0, 1)', class = 'sd', resp = 'deltao', dpar = 'mu1') +
     set_prior('normal(0,1)', class = 'b', resp = 'deltao', dpar = 'theta1')
   # set_prior('student_t(7, 0, .25)', class = 'sd',resp = 'deltao', dpar='theta1')
+model_form  = bf(delta_o |  mi(delta.se_o) ~ 1, 
+                 mu1 ~ 0, 
+                 mu2 ~ mi(delta_p) * offspring , 
+                 # sigma2 = 'sigma1', 
+                 theta1 ~  offspring, theta2 = 1,
+                 family = mix) + 
+    bf(delta_p | mi(delta.se_p) ~ 1, family = gaussian()) + set_rescor(FALSE)
+  
+  # get_prior(vtheatab_form, all_dat)
+  
+  
   validate_prior(full_prior, model_form, input_data, mix)
   
-}
+# code = make_stancode(model_form, input_data, mix, full_prior, threads = threading(16), backend = 'cmdstanr')
+# write_lines(code, 'stan_models/mixture_model_brm.stan')  
+  make_standata(model_form, input_data, mix, full_prior, threads = threading(16), backend = 'cmdstanr') |> str()
+
 model_run = brm(model_form, input_data, mix, full_prior, chains = 4 , cores = 4,
                  warmup = 1500, iter=3000, seed  = seed, init = 0,
                  backend = 'cmdstanr' , threads = threading(16))

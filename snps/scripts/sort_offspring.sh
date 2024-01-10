@@ -16,7 +16,7 @@ OUT_FILE=offspring/sorted_bams/${ID}_sorted.bam
 # mkdir -p $IN_DIR $OUT_DIR
 
 # Sort
-SORT_ARGS="-o $OUT_FILE -@$N_CORES $DD_OUT_DIR/${ID}.deduplicated.bam"
+SORT_ARGS="-o $OUT_FILE -@$N_CORES $DEDUP_FILE"   #$DD_OUT_DIR/${ID}.deduplicated.bam"
 samtools sort $SORT_ARGS
 
 # Index
@@ -30,4 +30,3 @@ fi
 # # Move the report
 # REPORT=$OUT_DIR/${FILE/.bam/.deduplication_report.txt}
 # mv $REPORT reports/dedup
-

@@ -40,8 +40,8 @@ function add_job {
 # Assemble the job file
 > $LAUNCHER_JOB_FILE
 for dir in $DIRECS; do
-    echo OUTPUT='vcf/concat/'`basename $dir`".bcf"
-  # add_job $dir
+    # echo OUTPUT='vcf/concat/'`basename $dir`".bcf"
+   add_job $dir
 done
 
 export LAUNCHER_WORKDIR=`pwd`

@@ -192,7 +192,7 @@ du -h methyl_extract/*lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated*
 # 109G    methyl_extract/Non_CpG_context_lane1-A2-B_S2_L001_1.trim_bismark_bt2_pe.deduplicated.txt
 
 # This is more or less what's expected, so run the rest
-
+sbatch slurm/sort_run.slurm
 sbatch slurm/bismark_extract_run.slurm
 ```
 

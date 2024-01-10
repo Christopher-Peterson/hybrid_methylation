@@ -27,7 +27,10 @@ nogene_data="model_data/dss_filtered_uncorrelated_nogene_${delta}_N${N}.bed"
 
 
 # bed of gene body features
-gbm_filter="$SCRATCH/hybrid_methylation/setup/wgbs_setup/genomes_for_bismark/Amil/cdsBoundaries.bed"
+# Use this if we're defining GBM as coding sequences
+# gbm_filter="$SCRATCH/hybrid_methylation/setup/wgbs_setup/genomes_for_bismark/Amil/cdsBoundaries.bed"
+# Use this if we want to include introns
+gbm_filter="$SCRATCH/hybrid_methylation/setup/wgbs_setup/genomes_for_bismark/Amil/geneBoundaries.bed"
 
 
 # BRMS Specific outputs

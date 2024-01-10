@@ -1,13 +1,3 @@
-# To Do w/ new data
-
-# 1. fix the pipeline
-  # Do the parent-offspring single option
-# 2. Fix the data (re-use script if possible)
-  # Alternatively, fix it before running the script
-# 3. Run the mixture model & extraction script
-  # Modify the script so that it can take the new data
-# Update the script for the new figure 2
-
 # Post-process the results
 suppressPackageStartupMessages({
   library(tidyverse)
@@ -17,8 +7,6 @@ if(!exists('argv')) argv = commandArgs(TRUE)
 out_file = argv[1] %|% 'out/dss_filtered_uncorrelated_0.25_N8.bed'
 delta_limit = argv[2] |> as.numeric() %|% 0.25
 N_limit = argv[3] |> as.integer() %|% 8L
-
-
 
 get_dml = \(delta, delta_se, threshold = filt_delta) {
   # taken from DSS::callDML

@@ -4,6 +4,7 @@ source('figures/scripts/setup_figures.r')
 source('dss/scripts/standardize_data.r')
 
 
+
 ### Helper Functions ####
 ### 
 
@@ -21,7 +22,7 @@ filter_and_index = \(df, var_name, index_name = 'idx') {
 }
 
 # the two guide args should be uncalled functions
-multi_consistency_fig = \(diff_delta_data, locus_data, alpha_lims = alpha_limits) {
+multi_consistency_fig = \(diff_delta_data, locus_data, alpha_lims = alpha_limits, plot_name = 'add a name') {
   # Dataset for red ticks, indicating non-heritability
   diff_tick_data = locus_data |> filter(locMean_q95 < 0 | locMean_q5 > 0) 
   
@@ -60,19 +61,26 @@ multi_consistency_fig = \(diff_delta_data, locus_data, alpha_lims = alpha_limits
           axis.ticks.x = element_blank(), 
           legend.direction = 'horizontal',
           legend.justification = c(0,0),
+          axis.line.y.right = element_blank(),
+          axis.ticks.y.right = element_blank(),
+          axis.text.y.right = element_blank(),
           # legend.text = element_markdown(),
           legend.background = element_blank(),
           #axis.title.x = element_blank(),
           # strip.background = element_blank(),
           # strip.text = element_blank(),
-          axis.title.y = element_blank()) +
-    scale_y_continuous(labels$diff_delta_long,expand = expansion(mult = c(0.02, 0.1))
+          axis.title.y.left = element_blank()) +
+    scale_y_continuous(labels$diff_delta_long,expand = expansion(mult = c(0.02, 0.1)),
+                       sec.axis = dup_axis(
+                         # Create secondary axis for second y lab
+                         name = plot_name
+                       )
                        # limits = range(consist_data_all$diff_delta)
     )+ scale_x_continuous(expand = expansion(add = 1)) 
 }
 
 
-NULL
+
 
 #### REad in the Data ####
 
@@ -82,29 +90,36 @@ gbm_loci = read_tsv(gbm_file) |> distinct(chrom = `#chrom`, start) |> mutate(gbm
 
 full_data = full_consist_model_data |>
   mutate(index = 1:n(), merged_chrom = chrom_to_number(chrom)) |> 
-  left_join(gbm_loci) |> mutate(gbm = !is.na(gbm))
+  left_join(gbm_loci) |> mutate(gbm = !is.na(gbm)) |> 
+  mutate(eta_hat = sgn * (delta_o - delta_p))
 
 
-diff_delta_data = consist_smry  |> filter_and_index('diff_delta', 'index') |> 
+diff_delta_data = consist_smry  |>
+  filter_and_index('diff_delta', 'index') |> 
   select(index, diff_delta = median, diff_delta_q5 = q5, diff_delta_q95 = q95) |> 
-  left_join(full_data |> select(index, merged_chrom, start, offspring, locus, diff_delta_rough = diff_delta, sgn, gbm),
+  left_join(full_data |> select(index, merged_chrom, start, offspring, locus, 
+                                eta_hat, delta_o, delta_p, sgn, gbm),
             by = 'index') |> 
   left_join(offspring_details)
 
 locus_data = left_join(
   consist_smry |> filter_and_index('sigma_sdeltao_locus', 'locus') |>
-    select(sigma = median, sigma_q5 = q5, sigma_q95 = q95, locus) ,
-  consist_smry |> filter_and_index('r_1_sdeltao_1', 'locus') |> 
-    select(locMean = median, locMean_q5 = q5, locMean_q95 = q95, locus) ,
+    # select(sigma = median, sigma_q5 = q5, sigma_q95 = q95, locus) ,
+    select(sigma = median, sigma_q5 = q2.5, sigma_q95 = q97.5, locus) ,
+  consist_smry |> filter_and_index('locus_mean', 'locus') |> 
+    # select(locMean = median, locMean_q5 = q5, locMean_q95 = q95, locus) ,
+    select(locMean = median, locMean_q5 = q2.5, locMean_q95 = q97.5, locus) ,
   by = 'locus') |> 
   left_join(full_data |> select(locus, start, gbm, merged_chrom, chrom), by = 'locus') |> 
   distinct()
 alpha_limits = (locus_data$sigma^2) |> range()
 
 gbm_data = lst(diff_delta_data, locus_data) |> 
-  map(\(x) filter(x, gbm) |> ungroup() |> mutate(locus = factor(locus) |> as.integer()))
+  map(\(x) filter(x, gbm) |> ungroup() |> mutate(locus = factor(locus) |> as.integer())) |> 
+  c(plot_name = 'Gene Body Loci')
 nogene_data = lst(diff_delta_data, locus_data) |> 
-  map(\(x) filter(x, !gbm) |>  ungroup() |> mutate(locus = factor(locus) |> as.integer()))
+  map(\(x) filter(x, !gbm) |>  ungroup() |> mutate(locus = factor(locus) |> as.integer())) |> 
+  c(plot_name = "Intergenic Loci")
 
 #### Make the plots ####
 
@@ -123,11 +138,14 @@ color_legend = diff_delta_data |> distinct(pretty_offspring) |>
 
 
 consist_fig_gbm = do.call(multi_consistency_fig, gbm_data) +
+  theme(axis.title.y.left = element_blank()) + 
   theme(legend.position = c(0.118, 0)) + # This is the alpha legend
   inset_element(color_legend, left = 0.115, right = 0.365, top = 0.48, bottom = 0.2, clip = FALSE,on_top = TRUE )
   # c(0.38,0.0))
-consist_fig_nogene =  do.call(multi_consistency_fig, nogene_data) + theme(legend.position = 'none') # c(0.38,0.0))
-                        
+consist_fig_nogene =  do.call(multi_consistency_fig, nogene_data) +
+  theme(axis.title.y.left = element_blank()) + 
+  theme(legend.position = 'none') # c(0.38,0.0))
+
 fig2_full = ggplot() + 
   theme_classic() + 
   theme(line = element_blank(),
@@ -138,14 +156,41 @@ fig2_full = ggplot() +
         # legend.position = 'bottom'
         ) + 
   labs(x = "Rank position in the genome",
-       y = 'Heritability Index (η)' ) +
+       y = labels$eta ) +
        # y = 'Intergenerational Change in Differential Methylation<br>(Negative values indicate less differential methylation in offspring)') +
   # y = labels$diff_delta_long,) + 
-  inset_element( (consist_fig_gbm & labs(x = NULL, y = NULL) ) / 
+  inset_element( (consist_fig_gbm  & labs(x = NULL)  ) / 
                    (consist_fig_nogene &  labs(x = NULL, y = NULL)) +
                    patchwork::plot_annotation(tag_levels = 'A'), 
                  left = 0, right = 1, top = 1, bottom = 0)
-ggsave(out_files$consistency_1d, fig2_full, width = 16, height = 8, dpi = 300)
+ggsave(out_files$consistency_1d, fig2_full, width = 16, height = 8, dpi = 1200)
     # fig2_full
- 
 
+# Make a figure of the summary stats
+
+# gbm_data$
+
+### Locus-specific model variance estimates figure ####
+parm_estimates = bind_rows(
+  consist_smry |> filter_and_index(c('sd_1'))|> 
+    mutate(parameter = 'Among-Locus\nvariation', lab = "A"),
+  consist_smry |> filter_and_index('sigma_sdeltao') |> 
+    mutate(parameter = 'Within-Locus\nvariation', lab = "B"),
+) |>  mutate(group = c('Intergenic Regions', 'Gene Bodies')[idx]) |> 
+  select(group, parameter, median, q2.5, q97.5, lab) |> 
+  mutate(lab = if_else(group == 'Gene Bodies', '', lab))
+
+consistency_sd_plot = parm_estimates |>
+  ggplot(aes(x = median, y = group)) + 
+  facet_wrap(~parameter, ncol = 1, strip.position = 'right') + 
+  geom_linerange(aes(xmin = q2.5, xmax = q97.5), linewidth = 1.2, color = grey(.5)) + 
+  geom_point(color = 'black', pch = '|', size = 4) + 
+  labs(y = '', x = 'SD(η)') + 
+  geom_text(aes(label = lab), x = 0.17, vjust = -1.8, fontface = 'bold' ) + 
+  theme(strip.background = element_blank())
+
+ggsave(out_files$consistency_parameters, consistency_sd_plot, width = 5.5, height = 3, dpi = 300)
+# Now, extract the locus effects
+# and plot them, colored by significance
+
+# Make a count w/ percentages
