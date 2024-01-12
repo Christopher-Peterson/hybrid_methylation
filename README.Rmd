@@ -32,9 +32,7 @@ git clone https://github.com/Christopher-Peterson/hybrid_methylation.git
 
 2. Setup and configure the [Docker/Singularity images](setup/docker/).
 
-Data from several stages of this pipeline are available:
-(details)
-
+Raw reads and methylation calls are available from the NCBI Gene Expression Omnibus, [Accession GSE252970](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE252970).  
 
 Contributors to this repository should also follow [these instructions](setup/dev).
 
